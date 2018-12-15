@@ -11,6 +11,9 @@ set (mctp_src
   src/basetree.cpp
   src/inputgraph.cpp
   src/multipleconsensustrees.cpp
+  src/mctsolver.cpp
+  src/mctsolverbf.cpp
+  src/mctsolverca.cpp
 )
 
 set (mctp_hdr
@@ -19,6 +22,9 @@ set (mctp_hdr
   src/basetree.h
   src/inputgraph.h
   src/multipleconsensustrees.h
+  src/mctsolverbf.h
+  src/mctsolverca.h
+  src/mctsolver.h
 )
 
 # first we can indicate the documentation build as an option and set it to ON by default
