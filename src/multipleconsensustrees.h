@@ -29,6 +29,7 @@ public:
   std::vector<int> generateInitialClustering();
   void setClustering(const std::vector<int>& clustering);
   void setConsensusTrees(const std::vector<int>& chosenTrees);
+  void clearConsensusTrees();
   
 private:
   int _k;
@@ -36,25 +37,25 @@ private:
   int _seed;
   int _clusteringCost; // distance between each tree in ctv and each of its corresponding consensus tree
   const CloneTreeVector& _ctv;
-  std::map<int, CloneTreeVector> _cluster2trees;
-  std::map<int, InputGraph*> _cluster2consensus;
-  std::map<int, int> _cluster2cost;
-  std::map<int, int> _cluster2totaltrees;;
+  std::vector<std::set<int>> _cluster2trees;
+  std::vector<ParentChildGraph*> _cluster2consensus;
+  std::vector<int> _cluster2cost;
+  std::vector<int> _cluster2totaltrees;
   std::vector<int> _clustering;
   std::string _id;
   
   void init();
-  void clearConsensusTrees();
   
+  void resetClustering();
   
 };
 
 void multipleConsensusTrees(const CloneTreeVector& ctv,
                             int k, int r, int seed, std::string filename);
 int obtainClustering(const std::vector<int>& chosenTrees,
-                      const CloneTreeVector& ctv, int k);
+                     const CloneTreeVector& ctv, int k);
 IntPairIntVector Combination2(const CloneTreeVector& ctv, int k, int totalLen,
-                  int currTreeIdx, int numChosen, std::vector<int> chosenTrees);
+                              int currTreeIdx, int numChosen, std::vector<int> chosenTrees);
 void bruteForceMCT(const CloneTreeVector& ctv, int k, std::string filename);
 
 #endif // MULTIPLECONSENSUSTREES_H

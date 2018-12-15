@@ -6,7 +6,7 @@
  */
 #include "inputgraph.h"
 
-InputGraph::InputGraph(const CloneTreeVector& ctv)
+ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
   : _ctv(ctv)
   , _G()
   , _labelToNode()
@@ -16,7 +16,7 @@ InputGraph::InputGraph(const CloneTreeVector& ctv)
   init();
 }
 
-void InputGraph::init(){
+void ParentChildGraph::init(){
 //  std::cout << _ctv.size() << std::endl;
 
   for (const CloneTree& T : _ctv)
@@ -53,7 +53,7 @@ void InputGraph::init(){
   
 }
 
-void InputGraph::writeDOT(std::ostream &out) const{
+void ParentChildGraph::writeDOT(std::ostream &out) const{
   out << "digraph T {" << std::endl;
   out << "\t{" << std::endl;
   
@@ -72,7 +72,7 @@ void InputGraph::writeDOT(std::ostream &out) const{
 }
 
 
-int InputGraph::parentChildDistance(const CloneTree & T){
+int ParentChildGraph::parentChildDistance(const CloneTree & T){
   StringPairList GEdges = getSelectedEdgeList();
   GEdges.sort();
   StringPairList treeEdges = T.getEdgeList();
@@ -101,7 +101,7 @@ int InputGraph::parentChildDistance(const CloneTree & T){
   return symm_diff;
 }
 
-int InputGraph::clusteringCost(const CloneTreeVector & cluster){
+int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
   int total = 0;
   for (const CloneTree& T : cluster){
     total += parentChildDistance(T);
@@ -110,7 +110,7 @@ int InputGraph::clusteringCost(const CloneTreeVector & cluster){
   return total;
 }
 
-void InputGraph::SL_graphyc(){
+void ParentChildGraph::SL_graphyc(){
   Digraph::ArcMap<bool> mst(_G, false);
   int bestCost = 100000;
   

@@ -15,7 +15,11 @@ MultipleConsensusTrees::MultipleConsensusTrees(const CloneTreeVector& ctv,
 , _seed(seed)
 , _clusteringCost(-1)
 , _ctv(ctv)
-, _clustering(){
+, _clustering()
+, _cluster2trees(k)
+, _cluster2consensus(k)
+, _cluster2cost(k)
+, _cluster2totaltrees(k){
   init();
 }
 void MultipleConsensusTrees::setId(std::string filename){
@@ -26,21 +30,36 @@ void MultipleConsensusTrees::init(){
   //  std::cout << _ctv.size() << std::endl;
   srand(_seed);
   assert(_k >= 1);
+//  for (int i = 0; i < _k; i++){
+//    _cluster2trees[i] = s
+//  }
   generateInitialClustering();
+}
+
+void MultipleConsensusTrees::resetClustering(){
+  _clustering.clear();
+  for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
+    (*it).clear();
+  }
 }
 
 void MultipleConsensusTrees::clearConsensusTrees(){
   for (auto it = _cluster2consensus.begin(); it != _cluster2consensus.end(); it++ ){
-    delete _cluster2consensus[it->first];
-    _cluster2consensus[it->first] = NULL;
+    delete *it;
+    *it = NULL;
   }
 }
 
 void MultipleConsensusTrees::generateConsensusTrees(){
   clearConsensusTrees();
+  assert(_cluster2trees.size() != 0);
   for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
-    _cluster2consensus[it->first] = new InputGraph(it->second);
-    _cluster2consensus[it->first]->SL_graphyc();
+    std::vector<CloneTree> ctvcopy;
+    for (int idx: *it){
+      ctvcopy.push_back(_ctv[idx]);
+    }
+    _cluster2consensus[it - _cluster2trees.begin()] = new ParentChildGraph(ctvcopy);
+    _cluster2consensus[it - _cluster2trees.begin()]->SL_graphyc();
   }
 }
 
@@ -51,46 +70,48 @@ int MultipleConsensusTrees::getClusteringCost(){
   assert(_cluster2consensus.size() != 0);
   
   for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
-    _cluster2cost[it->first] =_cluster2consensus[it->first] ->
-                                clusteringCost(it->second);
-    _cluster2totaltrees[it->first] = it->second.size();
-    _clusteringCost += _cluster2consensus[it->first] ->
-                            clusteringCost(it->second);
+    std::vector<CloneTree> ctvcopy;
+    for (int idx: *it){
+      ctvcopy.push_back(_ctv[idx]);
+    }
+    int idx = it - _cluster2trees.begin();
+    _cluster2cost[idx] = _cluster2consensus[idx] ->
+                                clusteringCost(ctvcopy);
+    _cluster2totaltrees[idx] = ctvcopy.size();
+    _clusteringCost += _cluster2cost[idx];
   }
   return _clusteringCost;
 }
 
 std::vector<int>  MultipleConsensusTrees::generateInitialClustering(){
-  _clustering.clear();
-  for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
-    it->second.clear();
-  }
-  for (const CloneTree& T : _ctv){
+  resetClustering();
+  
+  for (int i = 0; i < _ctv.size(); i++){
     // assign each tree to a random cluster
     int cluster = rand() % _k;
     _clustering.push_back(cluster);
-    _cluster2trees[cluster].push_back(T);
+    _cluster2trees[cluster].insert(i);
   }
   return _clustering;
 }
 
 void MultipleConsensusTrees::updateClustering(){
   assert(_cluster2trees.size() != 0);
-  for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
-    it->second.clear();
-  }
-  for(const CloneTree& T: _ctv){
+  resetClustering();
+  for(int i = 0; i < _ctv.size(); i++){
     int bestCluster = 0;
     int bestDist = INT_MAX;
     for (auto it = _cluster2consensus.begin(); it != _cluster2consensus.end(); it++ ){
-      int dist = it->second->parentChildDistance(T);
+      int dist = (*it)->parentChildDistance(_ctv[i]);
       if (dist < bestDist){
         bestDist = dist;
-        bestCluster = it->first;
+        bestCluster =it-_cluster2consensus.begin();
       }
     }
-    _cluster2trees[bestCluster].push_back(T);
+    _cluster2trees[bestCluster].insert(i);
+    _clustering.push_back(bestCluster);
   }
+  
 }
 
 std::vector<int> MultipleConsensusTrees::getClustering(){
@@ -110,12 +131,12 @@ void MultipleConsensusTrees::writeClusteringtoFile(){
 }
 
 void MultipleConsensusTrees::setConsensusTrees(const std::vector<int>& chosenTrees){
+  resetClustering();
   for (int i = 0; i < _k; i++){
-    _cluster2trees[i].push_back(_ctv[chosenTrees[i]]);
+    _cluster2trees[i].insert(chosenTrees[i]);
   }
   generateConsensusTrees();
   updateClustering();
-  
 }
 
 void MultipleConsensusTrees::writeSummarytoFile(){
@@ -129,7 +150,7 @@ void MultipleConsensusTrees::writeSummarytoFile(){
   outFile << _r << " " << _k << " " << _clusteringCost << " ";
   for (auto it = _cluster2cost.begin(); it != _cluster2cost.end();){
 //    std::cout << "cost of cluster " << it->first << " is: "<< it->second << std::endl;
-    outFile << it->second;
+    outFile << *it;
     it++;
     if (it != _cluster2cost.end()){
       outFile << ",";
@@ -137,7 +158,7 @@ void MultipleConsensusTrees::writeSummarytoFile(){
   }
   outFile << " ";
   for (auto it = _cluster2totaltrees.begin(); it != _cluster2totaltrees.end();){
-    outFile << it->second;
+    outFile << *it;
     it++;
     if (it != _cluster2totaltrees.end()){
       outFile << ",";
@@ -180,6 +201,7 @@ void multipleConsensusTrees(const CloneTreeVector& ctv,
   mct.getClusteringCost();
   mct.writeClusteringtoFile();
   mct.writeSummarytoFile();
+  mct.clearConsensusTrees();
 
 }
 
@@ -198,6 +220,7 @@ int obtainClustering(const std::vector<int>& chosenTrees,
   MultipleConsensusTrees mct(ctv, k, 0, 0);
   mct.setConsensusTrees(chosenTrees);
   int cost = mct.getClusteringCost();
+  mct.clearConsensusTrees();
   return cost;
 }
 
@@ -236,11 +259,10 @@ void bruteForceMCT(const CloneTreeVector& ctv, int k, std::string filename){
   mct.setConsensusTrees(best.second);
   mct.generateConsensusTrees();
   mct.getClusteringCost();
-  //  mct.updateSummary();
+  assert(mct.getClusteringCost() == best.first);
   mct.writeClusteringtoFile();
-  //  mct.displayConsensusTrees();
   mct.writeSummarytoFile();
-  
+  mct.clearConsensusTrees();
   std::cout << "the best cost is: " << best.first << " and the items in it are " ;
   for (auto it = best.second.begin(); it != best.second.end(); it++){
     std::cout << *it << ",";

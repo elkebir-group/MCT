@@ -3,6 +3,8 @@
 #include "clonetree.h"
 #include "inputgraph.h"
 #include "multipleconsensustrees.h"
+#include "mctsolverca.h"
+#include "mctsolverbf.h"
 
 int main(int argc, char** argv){
 
@@ -47,10 +49,7 @@ int main(int argc, char** argv){
     return 1;
   }
   
-  multipleConsensusTrees(ctv, 1, restarts, 10, resultspath);
-//  bruteForceMCT(ctv, k, filenameTrees);
-//  InputGraph g(ctv);
-//  g.writeDOT(std::cout);
-//  g.SL_graphyc();
-//  g.clusteringCost(ctv);
+//  solveMCTCoordinateAscend(ctv, k, restarts, 10, resultspath);
+//  bruteForceMCT(ctv, k, resultspath);
+  solveMCTBruteForce(ctv, 2, "df");
 }

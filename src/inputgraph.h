@@ -11,10 +11,10 @@
 #include <lemon/min_cost_arborescence.h>
 #include <algorithm>
 
-class InputGraph{
+class ParentChildGraph{
 
 public:
-  InputGraph(const CloneTreeVector& ctv);
+  ParentChildGraph(const CloneTreeVector& ctv);
 
   void writeDOT(std::ostream & out) const;
   void SL_graphyc();
