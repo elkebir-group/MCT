@@ -4,26 +4,41 @@ project( mCTP )
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
-set (mctp_src
-  src/main.cpp
+set (mctpca_src
+  src/mainca.cpp
   src/utils.cpp
   src/clonetree.cpp
   src/basetree.cpp
   src/inputgraph.cpp
-  src/multipleconsensustrees.cpp
   src/mctsolver.cpp
-  src/mctsolverbf.cpp
   src/mctsolverca.cpp
 )
 
-set (mctp_hdr
+set (mctpca_hdr
   src/utils.h
   src/clonetree.h
   src/basetree.h
   src/inputgraph.h
-  src/multipleconsensustrees.h
-  src/mctsolverbf.h
   src/mctsolverca.h
+  src/mctsolver.h
+)
+
+set (mctpbf_src
+  src/mainbf.cpp
+  src/utils.cpp
+  src/clonetree.cpp
+  src/basetree.cpp
+  src/inputgraph.cpp
+  src/mctsolver.cpp
+  src/mctsolverbf.cpp
+)
+
+set (mctpbf_hdr
+  src/utils.h
+  src/clonetree.h
+  src/basetree.h
+  src/inputgraph.h
+  src/mctsolverbf.h
   src/mctsolver.h
 )
 
@@ -81,5 +96,7 @@ set( CommonLibs
   ${Boost_LIBRARIES}
 )
 
-add_executable( mCTP ${mctp_src} ${mctp_hdr} )
-target_link_libraries( mCTP ${CommonLibs} )
+add_executable( mCTPCA ${mctpca_src} ${mctpca_hdr} )
+target_link_libraries( mCTPCA ${CommonLibs} )
+add_executable( mCTPBF ${mctpbf_src} ${mctpbf_hdr} )
+target_link_libraries( mCTPBF ${CommonLibs} )

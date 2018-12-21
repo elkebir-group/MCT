@@ -22,7 +22,12 @@ void MCTSolverCA::init(){
   generateInitialClustering();
 }
 
-
+void pp(std::vector<int>& curr){
+  std::cout << "Initial clustering is: " ;
+  for (std::vector<int>::iterator it = curr.begin(); it != curr.end(); ++it)
+    std::cout << ' ' << *it;
+  std::cout << '\n';
+}
 
 std::vector<int> MCTSolverCA::generateInitialClustering(){
   resetClustering();
@@ -34,6 +39,7 @@ std::vector<int> MCTSolverCA::generateInitialClustering(){
     clustering.push_back(cluster);
     cluster2trees[cluster].insert(i);
   }
+//  pp(clustering);
   setClustering(clustering);
   setCluster2Trees(cluster2trees);
   return clustering;
@@ -43,8 +49,8 @@ void MCTSolverCA::writeSummarytoFile(){
   std::string id = getId();
   assert(!id.empty());
   std::ofstream outFile;
-  std::cout << id + "CAsummary.csv" << std::endl;
-  outFile.open(id + "CAsummary.csv", std::ios_base::app);
+  std::cout << id +"_k"+ std::to_string(_k)+ "_CAsummary.csv" << std::endl;
+  outFile.open(id + "_CAsummary.csv", std::ios_base::app);
   
   //  std::ofstream outFile("summary.csv");
   //  outfile.open("test.txt", std::ios_base::app);

@@ -32,8 +32,8 @@ void MCTSolverBF::writeSummarytoFile(){
   std::string id = getId();
   assert(!id.empty());
   std::ofstream outFile;
-  std::cout << id + "CAsummary.csv" << std::endl;
-  outFile.open(id + "CAsummary.csv", std::ios_base::app);
+  std::cout << id +"_BFsummary.csv" << std::endl;
+  outFile.open(id +"_BFsummary.csv", std::ios_base::app);
   outFile << "bruteforce" << " " << _k << " " << getClusteringCost() << " ";
   for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();){
     outFile << *it;
@@ -68,7 +68,7 @@ void MCTSolverBF::solveBF(){
       minChosenTrees = _chosenTrees;
     }
   }
-  pp(minChosenTrees);
+//  pp(minChosenTrees);
   setConsensusTrees(minChosenTrees);
   getClusteringCost();
   writeSummarytoFile();
@@ -110,5 +110,6 @@ void solveMCTBruteForce(const CloneTreeVector& ctv, int k, std::string filename)
   MCTSolverBF mct(ctv, k);
   mct.setId(filename);
   mct.solveBF();
+  mct.clearConsensusTrees();
 }
 
