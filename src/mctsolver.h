@@ -22,17 +22,11 @@ public:
   /// Destructor
   virtual ~MCTSolver();
   
-  void setId(const std::string& filename);
-  const std::string& getId() const
-  {
-    return _id;
-  }
-  
   void generateConsensusTrees();
   
   void displayConsensusTrees() const;
   
-  void writeClusteringtoFile() const;
+  void writeClustering(std::ostream& out) const;
   
   int getClusteringCost() const
   {
@@ -63,8 +57,7 @@ public:
     return _ctv.size();
   }
   
-//  virtual void writeSummary(const std::ostream& out) const = 0;
-  virtual void writeSummarytoFile() const = 0;
+  virtual void writeSummary(std::ostream& out) const = 0;
   
   virtual void solve() = 0;
   

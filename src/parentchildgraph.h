@@ -18,18 +18,21 @@ public:
   ParentChildGraph(const CloneTreeVector& ctv);
 
   void writeDOT(std::ostream & out) const;
+  void writeDOT(std::ostream & out,
+                int numTrees,
+                int cost) const;
   void SL_graphyc();
   int parentChildDistance(const CloneTree & T);
   int clusteringCost(const CloneTreeVector & cluster);
   
-  /// Return the selecteed edge set in _mst
-  StringPairList getSelectedEdgeList() const{
-    StringPairList res;
+  /// Return the selected edge set in _mst
+  StringPairSet getSelectedEdgeList() const{
+    StringPairSet res;
       for (ArcIt a(_G); a != lemon::INVALID; ++a) {
         if (_mst[a]){
           Node u = _G.source(a);
           Node v = _G.target(a);
-          res.push_back(StringPair(_nodeToLabel[u], _nodeToLabel[v]));
+          res.insert(StringPair(_nodeToLabel[u], _nodeToLabel[v]));
         }
       }
     return res;

@@ -18,7 +18,7 @@ public:
   /// @param k Number of clusters
   MCTSolverBF(const CloneTreeVector& ctv, int k);
 
-  virtual void writeSummarytoFile() const;
+  virtual void writeSummary(std::ostream& out) const;
   virtual void solve();
 
 private:

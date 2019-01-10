@@ -19,6 +19,7 @@ ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
 void ParentChildGraph::init(){
 //  std::cout << _ctv.size() << std::endl;
 
+  DynArcLookUp ae(_G);
   for (const CloneTree& T : _ctv)
   {
     for(NodeIt v(T.tree()); v != lemon::INVALID; ++v){
@@ -39,7 +40,6 @@ void ParentChildGraph::init(){
       assert(_labelToNode.count(label_src) == 1);
       assert(_labelToNode.count(label_tgt) == 1);
       
-      DynArcLookUp ae(_G);
       Arc a_exist = ae(_labelToNode[label_src],_labelToNode[label_tgt]);
       if (a_exist != lemon::INVALID){
         _arcCost[a_exist]--;
@@ -53,52 +53,62 @@ void ParentChildGraph::init(){
   
 }
 
-void ParentChildGraph::writeDOT(std::ostream &out) const{
+void ParentChildGraph::writeDOT(std::ostream &out, int numTrees, int cost) const{
   out << "digraph T {" << std::endl;
-  out << "\t{" << std::endl;
-  
+  out << "\tlabel=\"Number of trees: " << numTrees << "\\nCost: " << cost << "\"" << std::endl;
   for (NodeIt u(_G); u != lemon::INVALID; ++u)
   {
     out << "\t" << _G.id(u) << " [label=\"" << _nodeToLabel[u] << "\"]" << std::endl;
-    
   }
   
   for (ArcIt a(_G); a != lemon::INVALID; ++a)
   {
-    out << "\t" << _G.id(_G.source(a)) << " -> " << _G.id(_G.target(a)) << std::endl;
+    out << "\t" << _G.id(_G.source(a)) << " -> " << _G.id(_G.target(a));
+    out << " [label=\"" << _arcCost[a] << "\"";
+    if (_mst[a])
+    {
+      out << ",penwidth=3,color=red";
+    }
+    out << "]" << std::endl;
+    
   }
   
   out << "}" << std::endl;
 }
 
+void ParentChildGraph::writeDOT(std::ostream &out) const{
+  out << "digraph T {" << std::endl;
+  
+  for (NodeIt u(_G); u != lemon::INVALID; ++u)
+  {
+    out << "\t" << _G.id(u) << " [label=\"" << _nodeToLabel[u] << "\"]" << std::endl;
+  }
+  
+  for (ArcIt a(_G); a != lemon::INVALID; ++a)
+  {
+    out << "\t" << _G.id(_G.source(a)) << " -> " << _G.id(_G.target(a));
+    out << " [label=\"" << _arcCost[a] << "\"";
+    if (_mst[a])
+    {
+      out << ",penwidth=3,color=red";
+    }
+    out << "]" << std::endl;
+    
+  }
+  
+  out << "}" << std::endl;
+}
 
 int ParentChildGraph::parentChildDistance(const CloneTree & T){
-  StringPairList GEdges = getSelectedEdgeList();
-  GEdges.sort();
-  StringPairList treeEdges = T.getEdgeList();
-  treeEdges.sort();
-  int symm_diff = 0;
-  for (auto e1:GEdges){
-    bool exist = false;
-    for (auto e2:treeEdges){
-      if (e1 == e2)
-        exist = true;
-    }
-    if (!exist){
-      symm_diff ++;
-    }
-  }
-  for (auto e1:treeEdges){
-    bool exist = false;
-    for (auto e2:GEdges){
-      if (e1 == e2)
-        exist = true;
-    }
-    if (!exist){
-      symm_diff ++;
-    }
-  }
-  return symm_diff;
+  StringPairSet GEdges = getSelectedEdgeList();
+  StringPairSet treeEdges = T.getEdgeSet();
+  
+  StringPairSet resSet;
+  std::set_symmetric_difference(GEdges.begin(), GEdges.end(),
+                                treeEdges.begin(), treeEdges.end(),
+                                std::inserter(resSet, resSet.begin()));
+  
+  return resSet.size();
 }
 
 int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
@@ -112,8 +122,7 @@ int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
 
 void ParentChildGraph::SL_graphyc(){
   Digraph::ArcMap<bool> mst(_G, false);
-  //TODO: MAXINT
-  int bestCost = 100000;
+  int bestCost = INT_MAX;
   
   for (NodeIt u(_G); u != lemon::INVALID; ++u){
     
@@ -124,7 +133,6 @@ void ParentChildGraph::SL_graphyc(){
       const Node& source = _G.source(a);
       const Node& target = _G.target(a);
       
-      // TODO: save arcs rather than nodes
       if (mst[a]){
         selectedNodes[source] = true;
         selectedNodes[target] = true;

@@ -25,12 +25,35 @@ MCTSolver::~MCTSolver(){
 
 void MCTSolver::run(MCTSolver& solver,
                     const std::string& outputPrefix){
+//  std::string id = getId();
+//  assert(!id.empty());
+
   solver.solve();
-  solver.setId(outputPrefix);
-  solver.writeClusteringtoFile();
-  solver.writeSummarytoFile();
+  {
+    std::ofstream outFile;
+    outFile.open(outputPrefix +"_clustering.csv", std::ios_base::app);
+    solver.writeClustering(outFile);
+  }
+  
+  {
+    std::ofstream outFile;
+    outFile.open(outputPrefix +"_summary.csv", std::ios_base::app);
+    solver.writeSummary(outFile);
+  }
+    
   // TODO: write consensus trees to separate files
   solver.displayConsensusTrees();
+  
+  char buf[1024];
+  for (int j = 0; j < solver._k; ++j)
+  {
+    snprintf(buf, 1024, "%s_cluster%d.dot", outputPrefix.c_str(), j);
+    std::ofstream outFile(buf);
+    solver._cluster2consensus[j]->writeDOT(outFile,
+                                           solver._cluster2totaltrees[j],
+                                           solver._cluster2cost[j]);
+    outFile.close();
+  }
 }
 
 void MCTSolver::displayConsensusTrees() const{
@@ -108,12 +131,6 @@ void MCTSolver::setClustering(const std::vector<int>& clustering){
   updateClusteringCost();
 }
 
-void MCTSolver::setId(const std::string& filename){
-  _id = filename;
-}
-
-void MCTSolver::writeClusteringtoFile() const{
-  assert(!_id.empty());
-  std::ofstream outFile(_id + "k" + std::to_string(_k)+ "clustering.txt");
-  for (const auto &e : _clustering) outFile << e << "\n";
+void MCTSolver::writeClustering(std::ostream& out) const{
+  for (const auto &e : _clustering) out << e << "\n";
 }

@@ -12,29 +12,24 @@ MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, int k)
 : MCTSolver(ctv, k){
 }
 
-void MCTSolverBF::writeSummarytoFile() const{
-  std::string id = getId();
-  assert(!id.empty());
-  std::ofstream outFile;
-  std::cout << id +"_BFsummary.csv" << std::endl;
-  outFile.open(id +"_BFsummary.csv", std::ios_base::app);
-  outFile << "bruteforce" << " " << _k << " " << getClusteringCost() << " ";
+void MCTSolverBF::writeSummary(std::ostream& out) const{
+  out << "bruteforce" << " " << _k << " " << getClusteringCost() << " ";
   for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();){
-    outFile << *it;
+    out << *it;
     it++;
     if (it != getCluster2Cost().end()){
-      outFile << ",";
+      out << ",";
     }
   }
-  outFile << " ";
+  out << " ";
   for (auto it = getCluster2TotalTrees().begin(); it != getCluster2TotalTrees().end();){
-    outFile << *it;
+    out << *it;
     it++;
     if (it != getCluster2TotalTrees().end()){
-      outFile << ",";
+      out << ",";
     }
   }
-  outFile << std::endl;
+  out << std::endl;
 }
 
 void MCTSolverBF::solve(){

@@ -59,32 +59,27 @@ std::vector<int> MCTSolverCA::generateInitialClustering(){
   return clustering;
 }
 
-void MCTSolverCA::writeSummarytoFile() const{
-  std::string id = getId();
-  assert(!id.empty());
-  std::ofstream outFile;
-  std::cout << id +"_k"+ std::to_string(_k)+ "_CAsummary.csv" << std::endl;
-  outFile.open(id + "_CAsummary.csv", std::ios_base::app);
+void MCTSolverCA::writeSummary(std::ostream& out) const{
   
   //  std::ofstream outFile("summary.csv");
   //  outfile.open("test.txt", std::ios_base::app);
-  outFile << _r << " " << _k << " " << getClusteringCost() << " ";
+  out << _r << " " << _k << " " << getClusteringCost() << " ";
   for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();){
-    outFile << *it;
+    out << *it;
     it++;
     if (it != getCluster2Cost().end()){
-      outFile << ",";
+      out << ",";
     }
   }
-  outFile << " ";
+  out << " ";
   for (auto it = getCluster2TotalTrees().begin(); it != getCluster2TotalTrees().end();){
-    outFile << *it;
+    out << *it;
     it++;
     if (it != getCluster2TotalTrees().end()){
-      outFile << ",";
+      out << ",";
     }
   }
-  outFile << std::endl;
+  out << std::endl;
 }
 
 void MCTSolverCA::solve(){

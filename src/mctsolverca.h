@@ -13,7 +13,7 @@ class MCTSolverCA: public MCTSolver{
 public:
   MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed);
   
-  virtual void writeSummarytoFile() const;
+  virtual void writeSummary(std::ostream& out) const;
   
   virtual void solve();
 
