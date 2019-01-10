@@ -1,12 +1,13 @@
 /*
- * inputgraph.h
+ * parentchildgraph.h
  *
  *  Created on: 6-dec-2018
  *      Author: N. Aguse
  */
 
-#ifndef INPUTGRAPH_H
-#define INPUTGRAPH_H
+#ifndef PARENTCHILDGRAPH_H
+#define PARENTCHILDGRAPH_H
+
 #include "clonetree.h"
 #include <lemon/min_cost_arborescence.h>
 #include <algorithm>
@@ -47,4 +48,4 @@ private:
   
 };
 
-#endif // INPUTGRAPH_H
+#endif // PARENTCHILDGRAPH_H

@@ -1,9 +1,8 @@
 #include "utils.h"
 #include <lemon/arg_parser.h>
 #include "clonetree.h"
-#include "inputgraph.h"
+#include "parentchildgraph.h"
 #include "multipleconsensustrees.h"
-#include "mctsolverca.h"
 #include "mctsolverbf.h"
 
 int main(int argc, char** argv){
@@ -45,5 +44,6 @@ int main(int argc, char** argv){
     return 1;
   }
   
-  solveMCTBruteForce(ctv, k, resultspath);
+  MCTSolverBF solver(ctv, k);
+  MCTSolver::run(solver, resultspath);
 }

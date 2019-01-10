@@ -9,26 +9,10 @@
 
 
 MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, int k)
-: MCTSolver(ctv, k)
-  , _k(k)
-{
-  init();
+: MCTSolver(ctv, k){
 }
 
-MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, const std::vector<int>& chosenTrees)
-: MCTSolver(ctv, chosenTrees.size()){
-  setConsensusTrees(chosenTrees);
-  getClusteringCost();
-  init();
-}
-
-void MCTSolverBF::init(){
-  for (int i = 0; i < _k; i++){
-    _chosenTrees.push_back(i);
-  }
-}
-
-void MCTSolverBF::writeSummarytoFile(){
+void MCTSolverBF::writeSummarytoFile() const{
   std::string id = getId();
   assert(!id.empty());
   std::ofstream outFile;
@@ -53,49 +37,54 @@ void MCTSolverBF::writeSummarytoFile(){
   outFile << std::endl;
 }
 
-void MCTSolverBF::solveBF(){
-  assert(_chosenTrees.size() == _k);
-  setConsensusTrees(_chosenTrees);
-  int mincost = getClusteringCost();
-  std::vector<int> minChosenTrees = _chosenTrees;
-//  pp(_chosenTrees);
-  while(next()){
-//    pp(_chosenTrees);
-    setConsensusTrees(_chosenTrees);
-    int cost = getClusteringCost();
-    if (cost < mincost){
-      mincost = cost;
-      minChosenTrees = _chosenTrees;
+void MCTSolverBF::solve(){
+  const int n = _ctv.size();
+  
+  IntVector clustering(n, 0);
+  IntVector bestClustering;
+  int bestClusteringCost = INT_MAX;
+  
+  do
+  {
+    setClustering(clustering);
+    
+    if (getClusteringCost() < bestClusteringCost)
+    {
+      bestClusteringCost = getClusteringCost();
+      bestClustering = clustering;
     }
-  }
-//  pp(minChosenTrees);
-  setConsensusTrees(minChosenTrees);
-  getClusteringCost();
-  writeSummarytoFile();
-  writeClusteringtoFile();
+  } while (next(clustering));
+  
+  setClustering(bestClustering);
 }
 
-bool MCTSolverBF::next(){
-  int maxnum = getNumTrees()-1;
-  if (*_chosenTrees.rbegin() != maxnum){
-    (*_chosenTrees.rbegin())++;
-    return true;
-  }
-  else{
-    int endval = maxnum-1;
-    for (auto rit = _chosenTrees.rbegin()+1; rit != _chosenTrees.rend(); rit++){
-      if (*rit != endval){
-        (*rit)++;
-        int newval = *rit;
-        int offset = _chosenTrees.rend()-rit;
-        for (auto it = _chosenTrees.begin() +offset; it != _chosenTrees.end(); it++){
-          *it = ++newval;
-        }
-        return true;
-      }
-      endval--;
+bool MCTSolverBF::next(IntVector& clustering){
+  const int n = _ctv.size();
+
+  // 1. identify first position 'idx' with value smaller than _k - 1 (to increment)
+  int idx = 0;
+  for (; idx < n; ++idx){
+    if (clustering[idx] < _k - 1)
+    {
+      break;
     }
+  }
+
+  // 2. reset positions smaller than idx to 0
+  for (int i = 0; i < idx; ++i)
+  {
+    clustering[i] = 0;
+  }
+  
+  // 3. update clustering if possible (idx < n)
+  if (idx == n)
+  {
     return false;
+  }
+  else
+  {
+    ++clustering[idx];
+    return true;
   }
 }
 
@@ -105,11 +94,3 @@ void pp(std::vector<int>& curr){
     std::cout << ' ' << *it;
   std::cout << '\n';
 }
-
-void solveMCTBruteForce(const CloneTreeVector& ctv, int k, std::string filename){
-  MCTSolverBF mct(ctv, k);
-  mct.setId(filename);
-  mct.solveBF();
-  mct.clearConsensusTrees();
-}
-

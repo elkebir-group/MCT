@@ -4,7 +4,7 @@
  *  Created on: 6-dec-2018
  *      Author: N. Aguse
  */
-#include "inputgraph.h"
+#include "parentchildgraph.h"
 
 ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
   : _ctv(ctv)
@@ -112,6 +112,7 @@ int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
 
 void ParentChildGraph::SL_graphyc(){
   Digraph::ArcMap<bool> mst(_G, false);
+  //TODO: MAXINT
   int bestCost = 100000;
   
   for (NodeIt u(_G); u != lemon::INVALID; ++u){
@@ -123,6 +124,7 @@ void ParentChildGraph::SL_graphyc(){
       const Node& source = _G.source(a);
       const Node& target = _G.target(a);
       
+      // TODO: save arcs rather than nodes
       if (mst[a]){
         selectedNodes[source] = true;
         selectedNodes[target] = true;

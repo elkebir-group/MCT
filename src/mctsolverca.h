@@ -12,21 +12,21 @@
 class MCTSolverCA: public MCTSolver{
 public:
   MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed);
+  
+  virtual void writeSummarytoFile() const;
+  
+  virtual void solve();
+
+private:
   std::vector<int> generateInitialClustering();
-  void writeSummarytoFile();
+  
+  /// Update clustering when consensus trees are fixed
+  void updateClustering();
   
 private:
-  int _k;
   int _r;
   int _seed;
   void init();
-
-  
 };
 
-void solveMCTCoordinateAscend(const CloneTreeVector& ctv, int k,
-                              int r, int seed, std::string filename);
-
 #endif // MCTSOLVERCA_H
-
-

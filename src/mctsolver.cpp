@@ -6,38 +6,46 @@
  */
 
 #include "mctsolver.h"
-//
-//MCTSolver::MCTSolver()
-//:  _k()
-//, _clusteringCost(-1)
-//, _ctv()
-//, _clustering()
-//, _cluster2trees()
-//, _cluster2consensus()
-//, _cluster2cost()
-//, _cluster2totaltrees(){
-//
-//}
 
 MCTSolver::MCTSolver(const CloneTreeVector& ctv, int k)
-:  _k(k)
+: _ctv(ctv)
+, _k(k)
 , _clusteringCost(-1)
-, _ctv(ctv)
-, _clustering()
 , _cluster2trees(k)
 , _cluster2consensus(k)
 , _cluster2cost(k)
 , _cluster2totaltrees(k)
-, _numTrees(ctv.size()){
-
+, _clustering()
+, _id(){
 }
 
+MCTSolver::~MCTSolver(){
+  clearConsensusTrees();
+}
+
+void MCTSolver::run(MCTSolver& solver,
+                    const std::string& outputPrefix){
+  solver.solve();
+  solver.setId(outputPrefix);
+  solver.writeClusteringtoFile();
+  solver.writeSummarytoFile();
+  // TODO: write consensus trees to separate files
+  solver.displayConsensusTrees();
+}
+
+void MCTSolver::displayConsensusTrees() const{
+  for (int i = 0; i < _k; ++i){
+    auto edges = _cluster2consensus[i]->getSelectedEdgeList();
+    for (const auto& edge : edges){
+      std::cerr << edge.first << " " << edge.second << std::endl;
+    }
+    std::cerr << std::endl << std::endl;
+  }
+}
 
 void MCTSolver::resetClustering(){
   _clustering.clear();
-  for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
-    (*it).clear();
-  }
+  _cluster2trees = IntSetVector(_k);
 }
 
 void MCTSolver::clearConsensusTrees(){
@@ -49,18 +57,23 @@ void MCTSolver::clearConsensusTrees(){
 
 void MCTSolver::generateConsensusTrees(){
   clearConsensusTrees();
-  assert(_cluster2trees.size() != 0);
-  for (auto it = _cluster2trees.begin(); it != _cluster2trees.end(); it++ ){
+  assert(_cluster2trees.size() == _k);
+  
+  int clusterIdx = 0;
+  for (const IntSet& trees : _cluster2trees){
     std::vector<CloneTree> ctvcopy;
-    for (int idx: *it){
-      ctvcopy.push_back(_ctv[idx]);
+    
+    for (int treeIdx : trees){
+      ctvcopy.push_back(_ctv[treeIdx]);
     }
-    _cluster2consensus[it - _cluster2trees.begin()] = new ParentChildGraph(ctvcopy);
-    _cluster2consensus[it - _cluster2trees.begin()]->SL_graphyc();
+    _cluster2consensus[clusterIdx] = new ParentChildGraph(ctvcopy);
+    _cluster2consensus[clusterIdx]->SL_graphyc();
+    
+    ++clusterIdx;
   }
 }
 
-int MCTSolver::getClusteringCost(){
+void MCTSolver::updateClusteringCost(){
   _clusteringCost = 0;
   
   assert(_cluster2trees.size() != 0);
@@ -77,71 +90,30 @@ int MCTSolver::getClusteringCost(){
     _cluster2totaltrees[idx] = ctvcopy.size();
     _clusteringCost += _cluster2cost[idx];
   }
-  return _clusteringCost;
-}
-
-void MCTSolver::updateClustering(){
-  assert(_cluster2trees.size() != 0);
-  resetClustering();
-  for(int i = 0; i < _ctv.size(); i++){
-    int bestCluster = 0;
-    int bestDist = INT_MAX;
-    for (auto it = _cluster2consensus.begin(); it != _cluster2consensus.end(); it++ ){
-      int dist = (*it)->parentChildDistance(_ctv[i]);
-      if (dist < bestDist){
-        bestDist = dist;
-        bestCluster =it-_cluster2consensus.begin();
-      }
-    }
-    _cluster2trees[bestCluster].insert(i);
-    _clustering.push_back(bestCluster);
-  }
-}
-
-std::vector<int>& MCTSolver::getClustering(){
-  assert(_clustering.size() == _ctv.size());
-  return _clustering;
 }
 
 void MCTSolver::setClustering(const std::vector<int>& clustering){
   assert(clustering.size() == _ctv.size());
   _clustering = clustering;
+  
+  // update _cluster2trees
+  const int n = _ctv.size();
+  _cluster2trees = IntSetVector(_k);
+  for (int i = 0; i < n; ++i)
+  {
+    _cluster2trees[clustering[i]].insert(i);
+  }
+  
+  generateConsensusTrees();
+  updateClusteringCost();
 }
 
-void MCTSolver::setId(std::string filename){
+void MCTSolver::setId(const std::string& filename){
   _id = filename;
 }
 
-std::string MCTSolver::getId(){
-  return _id;
-}
-
-void MCTSolver::writeClusteringtoFile(){
+void MCTSolver::writeClusteringtoFile() const{
   assert(!_id.empty());
   std::ofstream outFile(_id + "k" + std::to_string(_k)+ "clustering.txt");
   for (const auto &e : _clustering) outFile << e << "\n";
-}
-
-void MCTSolver::setConsensusTrees(const std::vector<int>& chosenTrees){
-  resetClustering();
-  for (int i = 0; i < _k; i++){
-    _cluster2trees[i].insert(chosenTrees[i]);
-  }
-  generateConsensusTrees();
-  updateClustering();
-}
-
-void MCTSolver::setCluster2Trees(std::vector<std::set<int>> cluster2trees){
-  _cluster2trees = cluster2trees;
-}
-
-std::vector<int> MCTSolver::getCluster2Cost(){
-  return _cluster2cost;
-}
-std::vector<int> MCTSolver::getCluster2TotalTrees(){
-  return _cluster2totaltrees;
-}
-
-int MCTSolver::getNumTrees(){
-  return _numTrees;
 }

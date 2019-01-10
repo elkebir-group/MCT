@@ -7,27 +7,24 @@
 
 #ifndef MCTSOLVERBF_H
 #define MCTSOLVERBF_H
+
 #include "mctsolver.h"
 
 class MCTSolverBF: public MCTSolver{
 public:
+  /// Constructor
+  ///
+  /// @param ctv Input clone trees
+  /// @param k Number of clusters
   MCTSolverBF(const CloneTreeVector& ctv, int k);
-  MCTSolverBF(const CloneTreeVector& ctv, const std::vector<int>& chosenTrees);
-  void writeSummarytoFile();
-  void solveBF();
+
+  virtual void writeSummarytoFile() const;
+  virtual void solve();
 
 private:
-  int _k;
-  bool next();
-  void init();
-  std::vector<int> _chosenTrees;
-
+  bool next(IntVector& clustering);
 };
 
 void pp(std::vector<int>& curr);
-void solveMCTBruteForce(const CloneTreeVector& ctv, int k,
-                          std::string filename);
 
 #endif // MCTSOLVERBF_H
-
-

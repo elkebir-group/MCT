@@ -7,48 +7,94 @@
 
 #ifndef MCTSOLVER_H
 #define MCTSOLVER_H
+
 #include "clonetree.h"
-#include "inputgraph.h"
-#include <stdlib.h> /* srand, rand */
-#include <time.h>
+#include "parentchildgraph.h"
 
 class MCTSolver{
 public:
+  /// Constructor
+  ///
+  /// @param ctv Input clone trees
+  /// @param k Number of clusters
   MCTSolver(const CloneTreeVector& ctv, int k);
   
-  void setId(std::string filename);
-  void updateClustering();
+  /// Destructor
+  virtual ~MCTSolver();
+  
+  void setId(const std::string& filename);
+  const std::string& getId() const
+  {
+    return _id;
+  }
+  
   void generateConsensusTrees();
-  void displayConsensusTrees();
-  void writeClusteringtoFile();
-  int getClusteringCost();
-  std::vector<int>& getClustering();
+  
+  void displayConsensusTrees() const;
+  
+  void writeClusteringtoFile() const;
+  
+  int getClusteringCost() const
+  {
+    return _clusteringCost;
+  }
+  
+  const IntVector& getClustering() const
+  {
+    return _clustering;
+  }
+  
   void setClustering(const std::vector<int>& clustering);
-  void setConsensusTrees(const std::vector<int>& chosenTrees);
-  void clearConsensusTrees();
-  std::vector<int> getCluster2Cost();
-  std::vector<int> getCluster2TotalTrees();
-  int getNumTrees();
-  void setCluster2Trees(std::vector<std::set<int>> cluster2trees);
-  void resetClustering();
-  std::string getId();
-  
-private:
-  int _k;
-  int _clusteringCost; // distance between each tree in ctv and each of its corresponding consensus tree
-  const CloneTreeVector& _ctv;
-  std::vector<std::set<int>> _cluster2trees;
-  std::vector<ParentChildGraph*> _cluster2consensus;
-  std::vector<int> _cluster2cost;
-  std::vector<int> _cluster2totaltrees;
-  std::vector<int> _clustering;
-  std::string _id;
-  int _numTrees;
-  
 
+  void clearConsensusTrees();
+
+  const IntVector& getCluster2Cost() const
+  {
+    return _cluster2cost;
+  }
   
+  const IntVector& getCluster2TotalTrees() const
+  {
+    return _cluster2totaltrees;
+  }
+
+  int getNumTrees() const
+  {
+    return _ctv.size();
+  }
+  
+//  virtual void writeSummary(const std::ostream& out) const = 0;
+  virtual void writeSummarytoFile() const = 0;
+  
+  virtual void solve() = 0;
+  
+  static void run(MCTSolver& solver,
+                  const std::string& outputPrefix);
+  
+protected:
+  void updateClusteringCost();
+  
+  void resetClustering();
+  
+protected:
+  /// Input trees
+  const CloneTreeVector& _ctv;
+  /// Number of clusters
+  const int _k;
+  /// Sum of distances between each input tree and its corresponding consensus tree
+  int _clusteringCost;
+  /// Set of input tree indices for each cluster
+  IntSetVector _cluster2trees;
+  /// Consensus tree of each cluster
+  std::vector<ParentChildGraph*> _cluster2consensus;
+  /// Total distance of the trees to the consensus tree in each cluster
+  std::vector<int> _cluster2cost;
+  /// Number of trees in each cluster
+  std::vector<int> _cluster2totaltrees;
+  /// Input tree index to cluster index
+  std::vector<int> _clustering;
+  /// Output prefix
+  std::string _id;
 };
 
 #endif // MCTSOLVER_H
-
-

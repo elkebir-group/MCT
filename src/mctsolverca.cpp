@@ -7,11 +7,9 @@
 
 #include "mctsolverca.h"
 
-
 MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed)
 : MCTSolver(ctv, k)
   , _r(r)
-  , _k(k)
   , _seed(seed){
   init();
 }
@@ -20,6 +18,24 @@ void MCTSolverCA::init(){
   srand(_seed);
   assert(_k >= 1);
   generateInitialClustering();
+}
+
+void MCTSolverCA::updateClustering(){
+  assert(_cluster2trees.size() != 0);
+  resetClustering();
+  for(int i = 0; i < _ctv.size(); i++){
+    int bestCluster = 0;
+    int bestDist = INT_MAX;
+    for (auto it = _cluster2consensus.begin(); it != _cluster2consensus.end(); it++ ){
+      int dist = (*it)->parentChildDistance(_ctv[i]);
+      if (dist < bestDist){
+        bestDist = dist;
+        bestCluster =it-_cluster2consensus.begin();
+      }
+    }
+    _cluster2trees[bestCluster].insert(i);
+    _clustering.push_back(bestCluster);
+  }
 }
 
 void pp(std::vector<int>& curr){
@@ -32,20 +48,18 @@ void pp(std::vector<int>& curr){
 std::vector<int> MCTSolverCA::generateInitialClustering(){
   resetClustering();
   std::vector<int> clustering;
-  std::vector<std::set<int>> cluster2trees(_k);
   for (int i = 0; i < getNumTrees(); i++){
     // assign each tree to a random cluster
     int cluster = rand() % _k;
     clustering.push_back(cluster);
-    cluster2trees[cluster].insert(i);
   }
 //  pp(clustering);
   setClustering(clustering);
-  setCluster2Trees(cluster2trees);
+
   return clustering;
 }
 
-void MCTSolverCA::writeSummarytoFile(){
+void MCTSolverCA::writeSummarytoFile() const{
   std::string id = getId();
   assert(!id.empty());
   std::ofstream outFile;
@@ -73,21 +87,18 @@ void MCTSolverCA::writeSummarytoFile(){
   outFile << std::endl;
 }
 
-void solveMCTCoordinateAscend(const CloneTreeVector& ctv,
-                            int k, int r, int seed, std::string filename){
-  
-  MCTSolverCA mct(ctv, std::min<int>(k, ctv.size()), r, seed);
-  mct.setId(filename);
+void MCTSolverCA::solve(){
   int minCost = INT_MAX;
   std::vector<int> bestClustering;
-  for (int i = 0; i < r; i++){
-    std::vector<int> currClustering = mct.generateInitialClustering();
-    int currCost;
+  for (int i = 0; i < _r; i++){
+    IntVector currClustering = generateInitialClustering();
+
+    int currCost = -1;
     while(true){
-      mct.generateConsensusTrees();
-      mct.updateClustering();
-      int newCost = mct.getClusteringCost();
-      const std::vector<int>& newClustering = mct.getClustering();
+      generateConsensusTrees();
+      updateClustering();
+      int newCost = getClusteringCost();
+      const IntVector& newClustering = getClustering();
       if (currClustering == newClustering){
         currCost = newCost;
         break;
@@ -102,12 +113,8 @@ void solveMCTCoordinateAscend(const CloneTreeVector& ctv,
   }
   //  std::cout << "min cost achieved: " << minCost << std::endl;
   
-  mct.setClustering(bestClustering);
-  mct.generateConsensusTrees();
-  mct.getClusteringCost();
-  mct.writeClusteringtoFile();
-  mct.writeSummarytoFile();
-  mct.clearConsensusTrees();
-  
+  setClustering(bestClustering);
+  generateConsensusTrees();
+  updateClusteringCost();
 }
 

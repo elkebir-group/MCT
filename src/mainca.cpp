@@ -2,10 +2,9 @@
 #include "utils.h"
 #include <lemon/arg_parser.h>
 #include "clonetree.h"
-#include "inputgraph.h"
+#include "parentchildgraph.h"
 #include "multipleconsensustrees.h"
 #include "mctsolverca.h"
-#include "mctsolverbf.h"
 
 int main(int argc, char** argv){
   
@@ -50,5 +49,6 @@ int main(int argc, char** argv){
     return 1;
   }
   
-  solveMCTCoordinateAscend(ctv, k, restarts, seed, resultspath);
+  MCTSolverCA solver(ctv, k, restarts, seed);
+  MCTSolver::run(solver, resultspath);
 }

@@ -7,8 +7,9 @@
 
 #ifndef MULTIPLECONSENSUSTREES_H
 #define MULTIPLECONSENSUSTREES_H
+
 #include "clonetree.h"
-#include "inputgraph.h"
+#include "parentchildgraph.h"
 #include <stdlib.h> /* srand, rand */
 #include <time.h>
 
