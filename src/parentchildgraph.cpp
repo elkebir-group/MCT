@@ -12,7 +12,8 @@ ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
   , _labelToNode()
   , _nodeToLabel(_G)
   , _arcCost(_G)
-  , _mst(_G){
+  , _mst(_G)
+  , _bestCost(INT_MAX){
   init();
 }
 
@@ -55,7 +56,8 @@ void ParentChildGraph::init(){
 
 void ParentChildGraph::writeDOT(std::ostream &out, int numTrees, int cost) const{
   out << "digraph T {" << std::endl;
-  out << "\tlabel=\"Number of trees: " << numTrees << "\\nCost: " << cost << "\"" << std::endl;
+  out << "\tlabel=\"Number of trees: " << numTrees << "\\nCost: "
+      << cost << "\\nMST cost:" << _bestCost << "\"" << std::endl;
   for (NodeIt u(_G); u != lemon::INVALID; ++u)
   {
     out << "\t" << _G.id(u) << " [label=\"" << _nodeToLabel[u] << "\"]" << std::endl;
@@ -122,7 +124,7 @@ int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
 
 void ParentChildGraph::SL_graphyc(){
   Digraph::ArcMap<bool> mst(_G, false);
-  int bestCost = INT_MAX;
+  _bestCost = INT_MAX;
   
   for (NodeIt u(_G); u != lemon::INVALID; ++u){
     
@@ -149,14 +151,12 @@ void ParentChildGraph::SL_graphyc(){
       }
     
     }
-    if (arborescence_cost < bestCost && chosen){
-      bestCost = arborescence_cost;
+    if (arborescence_cost < _bestCost && chosen){
+      _bestCost = arborescence_cost;
       
       for (ArcIt a(_G); a != lemon::INVALID; ++a){
         _mst[a] = mst[a];
       }
-      
     }
-    
   }
 }

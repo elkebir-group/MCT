@@ -37,6 +37,10 @@ public:
       }
     return res;
   }
+  
+  int getCost() const{
+    return _bestCost;
+  }
 
 private:
 
@@ -46,6 +50,7 @@ private:
   StringNodeMap _nodeToLabel;
   IntArcMap _arcCost;
   Digraph::ArcMap<bool> _mst;
+  int _bestCost;
   
   void init();
   

@@ -38,7 +38,7 @@ public:
     return _clustering;
   }
   
-  void setClustering(const std::vector<int>& clustering);
+  void setClustering(const IntVector& clustering);
 
   void clearConsensusTrees();
 
@@ -55,6 +55,24 @@ public:
   int getNumTrees() const
   {
     return _ctv.size();
+  }
+  
+  const ParentChildGraph* getConsensus(int j) const
+  {
+    assert(0 <= j && j < _k);
+    return _cluster2consensus[j];
+  }
+  
+  int getClusterNrTrees(int j) const
+  {
+    assert(0 <= j && j < _k);
+    return _cluster2totaltrees[j];
+  }
+  
+  int getClusterCost(int j) const
+  {
+    assert(0 <= j && j < _k);
+    return _cluster2cost[j];
   }
   
   virtual void writeSummary(std::ostream& out) const = 0;
