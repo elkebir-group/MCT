@@ -3,7 +3,6 @@
 #include <lemon/arg_parser.h>
 #include "clonetree.h"
 #include "parentchildgraph.h"
-#include "multipleconsensustrees.h"
 #include "mctsolverca.h"
 
 int main(int argc, char** argv){
@@ -22,7 +21,7 @@ int main(int argc, char** argv){
   ap.parse();
   
   if (ap.files().size() != 1){
-    std::cerr << "Error <trees> must be specified" << std::endl;
+    std::cerr << "Error: <trees> must be specified" << std::endl;
     return 1;
   }
   
@@ -33,7 +32,7 @@ int main(int argc, char** argv){
     if (filenameTrees != "-"){
       std::ifstream inTrees(filenameTrees.c_str());
       if (!inTrees.good()){
-        std::cerr << "Could not open '" << filenameTrees << "' for reading" << std::endl;
+        std::cerr << "Error: could not open '" << filenameTrees << "' for reading" << std::endl;
         return 1;
       }
       inTrees >> ctv;

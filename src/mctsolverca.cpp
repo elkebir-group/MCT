@@ -59,29 +59,6 @@ std::vector<int> MCTSolverCA::generateInitialClustering(){
   return clustering;
 }
 
-void MCTSolverCA::writeSummary(std::ostream& out) const{
-  
-  //  std::ofstream outFile("summary.csv");
-  //  outfile.open("test.txt", std::ios_base::app);
-  out << _r << " " << _k << " " << getClusteringCost() << " ";
-  for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();){
-    out << *it;
-    it++;
-    if (it != getCluster2Cost().end()){
-      out << ",";
-    }
-  }
-  out << " ";
-  for (auto it = getCluster2TotalTrees().begin(); it != getCluster2TotalTrees().end();){
-    out << *it;
-    it++;
-    if (it != getCluster2TotalTrees().end()){
-      out << ",";
-    }
-  }
-  out << std::endl;
-}
-
 void MCTSolverCA::solve(){
   int minCost = INT_MAX;
   std::vector<int> bestClustering;
@@ -90,6 +67,7 @@ void MCTSolverCA::solve(){
 
     int currCost = -1;
     while(true){
+      generateParentChildGraphs();
       generateConsensusTrees();
       updateClustering();
       int newCost = getClusteringCost();
@@ -109,6 +87,7 @@ void MCTSolverCA::solve(){
   //  std::cout << "min cost achieved: " << minCost << std::endl;
   
   setClustering(bestClustering);
+  generateParentChildGraphs();
   generateConsensusTrees();
   updateClusteringCost();
 }

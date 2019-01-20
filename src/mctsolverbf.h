@@ -10,7 +10,8 @@
 
 #include "mctsolver.h"
 
-class MCTSolverBF: public MCTSolver{
+class MCTSolverBF : public MCTSolver
+{
 public:
   /// Constructor
   ///
@@ -18,8 +19,12 @@ public:
   /// @param k Number of clusters
   MCTSolverBF(const CloneTreeVector& ctv, int k);
 
-  virtual void writeSummary(std::ostream& out) const;
   virtual void solve();
+  
+  virtual std::string getMethodName() const
+  {
+    return "BF";
+  }
 
 private:
   bool next(IntVector& clustering);

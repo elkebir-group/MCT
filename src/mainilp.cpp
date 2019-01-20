@@ -1,11 +1,18 @@
+/*
+ * mainvisualize.cpp
+ *
+ *  Created on: 19-jan-2019
+ *      Author: M. El-Kebir
+ */
+
 #include "utils.h"
 #include <lemon/arg_parser.h>
 #include "clonetree.h"
 #include "parentchildgraph.h"
-#include "mctsolverbf.h"
+#include "mctsolverilp.h"
 
-int main(int argc, char** argv){
-  
+int main(int argc, char** argv)
+{
   int k = 0;
   std::string resultspath;
   std::string clusteringStr;
@@ -44,7 +51,7 @@ int main(int argc, char** argv){
     return 1;
   }
   
-  MCTSolverBF solver(ctv, k);
+  MCTSolverILP solver(ctv, k);
   
   if (clusteringStr.empty()){
     MCTSolver::run(solver, resultspath);
@@ -84,3 +91,4 @@ int main(int argc, char** argv){
     }
   }
 }
+

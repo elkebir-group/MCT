@@ -4,6 +4,7 @@
  *  Created on: 6-dec-2018
  *      Author: N. Aguse
  */
+
 #include "parentchildgraph.h"
 
 ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
@@ -13,7 +14,8 @@ ParentChildGraph::ParentChildGraph(const CloneTreeVector& ctv)
   , _nodeToLabel(_G)
   , _arcCost(_G)
   , _mst(_G)
-  , _bestCost(INT_MAX){
+  , _mstCost(INT_MAX)
+{
   init();
 }
 
@@ -23,16 +25,18 @@ void ParentChildGraph::init(){
   DynArcLookUp ae(_G);
   for (const CloneTree& T : _ctv)
   {
-    for(NodeIt v(T.tree()); v != lemon::INVALID; ++v){
-      
-      if (_labelToNode.count(T.label(v)) == 0){
+    for (NodeIt v(T.tree()); v != lemon::INVALID; ++v)
+    {
+      if (_labelToNode.count(T.label(v)) == 0)
+      {
         Node n = _G.addNode();
         _nodeToLabel[n] = T.label(v);
         _labelToNode[T.label(v)] = n;
       }
     }
-    for(ArcIt a(T.tree()); a != lemon::INVALID; ++a){
-      
+
+    for (ArcIt a(T.tree()); a != lemon::INVALID; ++a)
+    {
       Node src = T.tree().source(a);
       Node tgt = T.tree().target(a);
       const std::string& label_src = T.label(src);
@@ -42,22 +46,24 @@ void ParentChildGraph::init(){
       assert(_labelToNode.count(label_tgt) == 1);
       
       Arc a_exist = ae(_labelToNode[label_src],_labelToNode[label_tgt]);
-      if (a_exist != lemon::INVALID){
+      if (a_exist != lemon::INVALID)
+      {
         _arcCost[a_exist]--;
       }
-      else{
+      else
+      {
         Arc newarc = _G.addArc(_labelToNode[label_src], _labelToNode[label_tgt]);
         _arcCost[newarc] = -1;
       }
     }
   }
-  
 }
 
-void ParentChildGraph::writeDOT(std::ostream &out, int numTrees, int cost) const{
+void ParentChildGraph::writeDOT(std::ostream &out, int numTrees, int cost) const
+{
   out << "digraph T {" << std::endl;
   out << "\tlabel=\"Number of trees: " << numTrees << "\\nCost: "
-      << cost << "\\nMST cost:" << _bestCost << "\"" << std::endl;
+      << cost << "\\nMST cost:" << _mstCost << "\"" << std::endl;
   for (NodeIt u(_G); u != lemon::INVALID; ++u)
   {
     out << "\t" << _G.id(u) << " [label=\"" << _nodeToLabel[u] << "\"]" << std::endl;
@@ -78,7 +84,8 @@ void ParentChildGraph::writeDOT(std::ostream &out, int numTrees, int cost) const
   out << "}" << std::endl;
 }
 
-void ParentChildGraph::writeDOT(std::ostream &out) const{
+void ParentChildGraph::writeDOT(std::ostream &out) const
+{
   out << "digraph T {" << std::endl;
   
   for (NodeIt u(_G); u != lemon::INVALID; ++u)
@@ -101,7 +108,8 @@ void ParentChildGraph::writeDOT(std::ostream &out) const{
   out << "}" << std::endl;
 }
 
-int ParentChildGraph::parentChildDistance(const CloneTree & T){
+int ParentChildGraph::parentChildDistance(const CloneTree & T)
+{
   StringPairSet GEdges = getSelectedEdgeList();
   StringPairSet treeEdges = T.getEdgeSet();
   
@@ -113,9 +121,11 @@ int ParentChildGraph::parentChildDistance(const CloneTree & T){
   return resSet.size();
 }
 
-int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
+int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster)
+{
   int total = 0;
-  for (const CloneTree& T : cluster){
+  for (const CloneTree& T : cluster)
+  {
     total += parentChildDistance(T);
   }
   
@@ -124,10 +134,10 @@ int ParentChildGraph::clusteringCost(const CloneTreeVector & cluster){
 
 void ParentChildGraph::SL_graphyc(){
   Digraph::ArcMap<bool> mst(_G, false);
-  _bestCost = INT_MAX;
+  _mstCost = INT_MAX;
   
-  for (NodeIt u(_G); u != lemon::INVALID; ++u){
-    
+  for (NodeIt u(_G); u != lemon::INVALID; ++u)
+  {
     Digraph::NodeMap<bool> selectedNodes(_G, false);
     int arborescence_cost = lemon::minCostArborescence(_G, _arcCost, u, mst);
     for (ArcIt a(_G); a != lemon::INVALID; ++a){
@@ -135,26 +145,29 @@ void ParentChildGraph::SL_graphyc(){
       const Node& source = _G.source(a);
       const Node& target = _G.target(a);
       
-      if (mst[a]){
+      if (mst[a])
+      {
         selectedNodes[source] = true;
         selectedNodes[target] = true;
       }
-      
     }
     
     bool chosen = true;
-    for (NodeIt n(_G); n != lemon::INVALID; ++n){
-      
-      if (selectedNodes[n] == false){
+    for (NodeIt n(_G); n != lemon::INVALID; ++n)
+    {
+      if (!selectedNodes[n])
+      {
         chosen = false;
         break;
       }
-    
     }
-    if (arborescence_cost < _bestCost && chosen){
-      _bestCost = arborescence_cost;
+    
+    if (arborescence_cost < _mstCost && chosen)
+    {
+      _mstCost = arborescence_cost;
       
-      for (ArcIt a(_G); a != lemon::INVALID; ++a){
+      for (ArcIt a(_G); a != lemon::INVALID; ++a)
+      {
         _mst[a] = mst[a];
       }
     }

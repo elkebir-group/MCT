@@ -12,10 +12,15 @@
 class MCTSolverCA: public MCTSolver{
 public:
   MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed);
-  
-  virtual void writeSummary(std::ostream& out) const;
-  
+
   virtual void solve();
+  
+  virtual std::string getMethodName() const
+  {
+    char buf[1024];
+    snprintf(buf, 1024, "CA-%d",_r);
+    return buf;
+  }
 
 private:
   std::vector<int> generateInitialClustering();

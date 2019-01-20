@@ -12,26 +12,6 @@ MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, int k)
 : MCTSolver(ctv, k){
 }
 
-void MCTSolverBF::writeSummary(std::ostream& out) const{
-  out << "bruteforce" << " " << _k << " " << getClusteringCost() << " ";
-  for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();){
-    out << *it;
-    it++;
-    if (it != getCluster2Cost().end()){
-      out << ",";
-    }
-  }
-  out << " ";
-  for (auto it = getCluster2TotalTrees().begin(); it != getCluster2TotalTrees().end();){
-    out << *it;
-    it++;
-    if (it != getCluster2TotalTrees().end()){
-      out << ",";
-    }
-  }
-  out << std::endl;
-}
-
 void MCTSolverBF::solve(){
   const int n = _ctv.size();
   

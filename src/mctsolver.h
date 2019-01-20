@@ -22,6 +22,8 @@ public:
   /// Destructor
   virtual ~MCTSolver();
   
+  void generateParentChildGraphs();
+  
   void generateConsensusTrees();
   
   void displayConsensusTrees() const;
@@ -75,7 +77,9 @@ public:
     return _cluster2cost[j];
   }
   
-  virtual void writeSummary(std::ostream& out) const = 0;
+  virtual void writeSummary(std::ostream& out) const;
+  
+  virtual std::string getMethodName() const = 0;
   
   virtual void solve() = 0;
   
