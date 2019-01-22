@@ -46,17 +46,27 @@ void pp(std::vector<int>& curr){
 }
 
 std::vector<int> MCTSolverCA::generateInitialClustering(){
-  resetClustering();
-  std::vector<int> clustering;
-  for (int i = 0; i < getNumTrees(); i++){
-    // assign each tree to a random cluster
-    int cluster = rand() % _k;
-    clustering.push_back(cluster);
+  while(true){
+    resetClustering();
+    IntVector clustering;
+    IntVector check(_k,0);
+    for (int i = 0; i < getNumTrees(); i++){
+      // assign each tree to a random cluster
+      int cluster = rand() % _k;
+      clustering.push_back(cluster);
+      check[cluster]++;
+    }
+    bool valid = true;
+    for(int i: check){
+      if (i == 0){
+        valid = false;
+      }
+    }
+    if (valid){
+      setClustering(clustering);
+      return clustering;
+    }
   }
-//  pp(clustering);
-  setClustering(clustering);
-
-  return clustering;
 }
 
 void MCTSolverCA::solve(){
