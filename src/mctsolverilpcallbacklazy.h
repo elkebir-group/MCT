@@ -1,37 +1,37 @@
 /*
- * mctsolverilpcallbackuser.h
+ * mctsolverilpcallbacklazy.h
  *
- *  Created on: 20-jan-2019
+ *  Created on: 21-jan-2019
  *      Author: M. El-Kebir
  */
 
-#ifndef MCTSOLVERILPCALLBACKUSER_H
-#define MCTSOLVERILPCALLBACKUSER_H
+#ifndef MCTSOLVERILPCALLBACKLAZY_H
+#define MCTSOLVERILPCALLBACKLAZY_H
 
 #include "mctsolverilpcallback.h"
 
-class MctSolverIlpCallbackUser : public MctSolverIlpCallback, public IloCplex::UserCutCallbackI
+class MctSolverIlpCallbackLazy : public MctSolverIlpCallback, public IloCplex::LazyConstraintCallbackI
 {
 public:
-  MctSolverIlpCallbackUser(IloEnv env,
+  MctSolverIlpCallbackLazy(IloEnv env,
                            int k,
                            const BoolMatrix& b,
                            const StringVector& indexToMutation,
                            IloNumVar3Matrix y,
                            IloNumVarMatrix z);
   
-  MctSolverIlpCallbackUser(const MctSolverIlpCallbackUser& other);
+  MctSolverIlpCallbackLazy(const MctSolverIlpCallbackLazy& other);
   
   void main()
   {
-//    std::cerr << "user" << std::endl;
+//    std::cerr << "lazy" << std::endl;
     if (_nodeNumber != getNnodes())
     {
       _nodeNumber = getNnodes();
       _cutCount = 0;
-      //      _makeAttempt = _backOff.makeAttempt();
+//      _makeAttempt = _backOff.makeAttempt();
     }
-    if (_cutCount < 50)
+    if (_cutCount < 10)
     {
       separate(getEnv());
       ++_cutCount;
@@ -40,7 +40,7 @@ public:
   
   IloCplex::CallbackI *duplicateCallback() const
   {
-    return (new (getEnv()) MctSolverIlpCallbackUser(*this));
+    return (new (getEnv()) MctSolverIlpCallbackLazy(*this));
   }
   
 protected:
@@ -48,4 +48,4 @@ protected:
   virtual void addConstraint(IloExpr expr);
 };
 
-#endif // MCTSOLVERILPCALLBACKUSER_H
+#endif // MCTSOLVERILPCALLBACKLAZY_H

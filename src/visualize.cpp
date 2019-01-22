@@ -55,6 +55,8 @@ Visualize::~Visualize(){
 
 void Visualize::writeDOT(std::ostream& out, bool allArcs) const
 {
+  StringToIntMap mapToIdx;
+  
   out << "digraph G {" << std::endl;
   
   int maxCount = 0;
@@ -66,12 +68,17 @@ void Visualize::writeDOT(std::ostream& out, bool allArcs) const
   
   if (!_ctv.empty())
   {
-//    // output nodes
-//    for (NodeIt v(_ctv[0].tree()); v != lemon::INVALID; ++v)
-//    {
-//      out << _ctv[0].label(v) << std::endl;
-//      break;
-//    }
+    // output nodes
+    for (NodeIt v(_ctv[0].tree()); v != lemon::INVALID; ++v)
+    {
+      const std::string& lbl_v = _ctv[0].label(v);
+      if (mapToIdx.count(lbl_v) == 0)
+      {
+        int idx = mapToIdx.size();
+        mapToIdx[lbl_v] = idx;
+      }
+      out << "\t" << mapToIdx[lbl_v] << " [label=\"" << lbl_v << "\"]" << std::endl;
+    }
     
     for (int clusterIdx = 0; clusterIdx < _k; ++clusterIdx)
     {
@@ -81,8 +88,8 @@ void Visualize::writeDOT(std::ostream& out, bool allArcs) const
       {
         if (arc.second > 0)
         {
-          out << "\t" << arc.first.first << " -> "
-              << arc.first.second << " [penwidth=" << 1. + arc.second / float(maxCount) * 4
+          out << "\t" << mapToIdx[arc.first.first] << " -> "
+              << mapToIdx[arc.first.second] << " [penwidth=" << 1. + arc.second / float(maxCount) * 4
               << ", colorscheme=\"set28\", color="
               << clusterIdx + 1
               << ", label=\""
@@ -90,9 +97,9 @@ void Visualize::writeDOT(std::ostream& out, bool allArcs) const
         }
         else
         {
-          out << "\t" << arc.first.first << " -> "
-              << arc.first.second << " [penwidth=" << 1. - arc.second / float(maxCount) * 4
-              << ", colorscheme=\"set28\", style=solid, color="
+          out << "\t" << mapToIdx[arc.first.first] << " -> "
+              << mapToIdx[arc.first.second] << " [penwidth=" << 1. - arc.second / float(maxCount) * 4
+              << ", colorscheme=\"set28\", style=dashed, color="
               << clusterIdx + 1
               << ", label=\""
               << "\"]" << std::endl;

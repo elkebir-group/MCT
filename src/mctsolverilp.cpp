@@ -6,7 +6,8 @@
  */
 
 #include "mctsolverilp.h"
-#include "mctsolverilpcallback.h"
+#include "mctsolverilpcallbacklazy.h"
+#include "mctsolverilpcallbackuser.h"
 
 MCTSolverILP::MCTSolverILP(const CloneTreeVector& ctv, int k)
   : MCTSolver(ctv, k)
@@ -105,48 +106,85 @@ void MCTSolverILP::initVariables()
   }
   
   // y[s][p][q] = 1 iff mutation p is the parent of mutation q in cluster s
-  _y = IloBoolVar3Matrix(_env, _k);
+//  _y = IloBoolVar3Matrix(_env, _k);
+//  for (int s = 0; s < _k; s++)
+//  {
+//    _y[s] = IloBoolVarMatrix(_env, m);
+//    for (int p = 0; p < m; p++)
+//    {
+//      _y[s][p] = IloBoolVarArray(_env, m);
+//      for (int q = 0; q < m; q++)
+//      {
+//        snprintf(buf, 1024, "y_%d_%d_%d", s, p, q);
+//        _y[s][p][q] = IloBoolVar(_env, buf);
+//      }
+//    }
+//  }
+  
+  _y = IloNumVar3Matrix(_env, _k);
   for (int s = 0; s < _k; s++)
   {
-    _y[s] = IloBoolVarMatrix(_env, m);
+    _y[s] = IloNumVarMatrix(_env, m);
     for (int p = 0; p < m; p++)
     {
-      _y[s][p] = IloBoolVarArray(_env, m);
+      _y[s][p] = IloNumVarArray(_env, m);
       for (int q = 0; q < m; q++)
       {
         snprintf(buf, 1024, "y_%d_%d_%d", s, p, q);
-        _y[s][p][q] = IloBoolVar(_env, buf);
+        _y[s][p][q] = IloNumVar(_env, 0., 1., buf);
       }
     }
   }
   
   // z[s][p] = 1 iff mutation p is the root of cluster s
-  _z = IloBoolVarMatrix(_env, _k);
+//  _z = IloBoolVarMatrix(_env, _k);
+  _z = IloNumVarMatrix(_env, _k);
   for (int s = 0; s < _k; s++)
   {
-    _z[s] = IloBoolVarArray(_env, m);
+//    _z[s] = IloBoolVarArray(_env, m);
+    _z[s] = IloNumVarArray(_env, m);
     for (int p = 0; p < m; p++)
     {
       snprintf(buf, 1024, "z_%d_%d", s, p);
-      _z[s][p] = IloBoolVar(_env, buf);
+      _z[s][p] = IloNumVar(_env, 0., 1., buf);
+//      _z[s][p] = IloBoolVar(_env, buf);
     }
   }
   
   // w[i][s][p][q] = x[i][s] * |a[i][p][q] - y[s][p][q])|
-  _w = IloBoolVar4Matrix(_env, n);
+//  _w = IloBoolVar4Matrix(_env, n);
+//  for (int i = 0; i < n; ++i)
+//  {
+//    _w[i] = IloBoolVar3Matrix(_env, _k);
+//    for (int s = 0; s < _k; ++s)
+//    {
+//      _w[i][s] = IloBoolVarMatrix(_env, m);
+//      for (int p = 0; p < m; ++p)
+//      {
+//        _w[i][s][p] = IloBoolVarArray(_env, m);
+//        for (int q = 0; q < m; ++q)
+//        {
+//          snprintf(buf, 1024, "w_%d_%d_%d_%d", i, s, p, q);
+//          _w[i][s][p][q] = IloBoolVar(_env, buf);
+//        }
+//      }
+//    }
+//  }
+  
+  _w = IloNumVar4Matrix(_env, n);
   for (int i = 0; i < n; ++i)
   {
-    _w[i] = IloBoolVar3Matrix(_env, _k);
+    _w[i] = IloNumVar3Matrix(_env, _k);
     for (int s = 0; s < _k; ++s)
     {
-      _w[i][s] = IloBoolVarMatrix(_env, m);
+      _w[i][s] = IloNumVarMatrix(_env, m);
       for (int p = 0; p < m; ++p)
       {
-        _w[i][s][p] = IloBoolVarArray(_env, m);
+        _w[i][s][p] = IloNumVarArray(_env, m);
         for (int q = 0; q < m; ++q)
         {
           snprintf(buf, 1024, "w_%d_%d_%d_%d", i, s, p, q);
-          _w[i][s][p][q] = IloBoolVar(_env, buf);
+          _w[i][s][p][q] = IloNumVar(_env, 0., 1.0, buf);
         }
       }
     }
@@ -207,11 +245,50 @@ void MCTSolverILP::initConstraints()
       {
         sum += _y[s][p][q];
       }
-      
+
       _model.add(sum == 1 - _z[s][q]);
       sum.clear();
     }
   }
+  
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int q = 0; q < m; ++q)
+    {
+      for (int p = 0; p < m; ++p)
+      {
+        sum += _y[s][p][q];
+      }
+    }
+    _model.add(sum == (m - 1));
+    sum.clear();
+  }
+  
+  // force root node:
+  IloExpr sum2(_env);
+//  for (int s = 0; s < _k; ++s)
+//  {
+//    for (int i = 0; i < n; ++i)
+//    {
+//      sum += _x[i][s];
+//    }
+//
+//    for (int p = 0; p < m; ++p)
+//    {
+//      for (int q = 0; q < m; ++q)
+//      {
+//        for (int i = 0; i < n; ++i)
+//        {
+//          sum2 += _x[i][s] * (1 - _a[i][q][p]);
+//        }
+//      }
+//      _model.add(_z[s][p] >= sum2 - sum*(m-1) + 1);
+//      sum2.clear();
+//    }
+//    sum.clear();
+//    _model.add(_z[s][8] == 1);
+//  }
+
   
   // objective
   for (int i = 0; i < n; ++i)
@@ -222,11 +299,54 @@ void MCTSolverILP::initConstraints()
       {
         for (int q = 0; q < m; ++q)
         {
-          _model.add(_w[i][s][p][q] >= (_a[i][p][q] ? 1 - _y[s][p][q] : _y[s][p][q])
-                    + _x[i][s] - 1);
+//          _model.add(_w[i][s][p][q] <= (_a[i][p][q] ? 1 - _y[s][p][q] : _y[s][p][q]));
+          _model.add(_w[i][s][p][q] <= _a[i][p][q]);
+          _model.add(_w[i][s][p][q] <= _y[s][p][q]);
+          _model.add(_w[i][s][p][q] <= _x[i][s]);
+//          _model.add(_w[i][s][p][q] >= _x[i][s] + _y[s][p][q] - 1);
+//          _model.add(_w[i][s][p][q] >= (_a[i][p][q] ? 1 - _y[s][p][q] : _y[s][p][q])
+//                    + _x[i][s] - 1);
         }
       }
     }
+  }
+//
+//  for (int i = 0; i < n; ++i)
+//  {
+//    for (int s = 0; s < _k; ++s)
+//    {
+//      for (int p = 0; p < m; ++p)
+//      {
+//        for (int q = 0; q < m; ++q)
+//        {
+//          sum += _w[i][s][p][q];
+//        }
+//      }
+//      _model.add(sum <= _x[i][s] * (m-1));
+//      sum.clear();
+//    }
+//  }
+
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int i = 0; i < n; ++i)
+    {
+      sum += _x[i][s] * (m - 1);
+    }
+    
+    for (int i = 0; i < n; ++i)
+    {
+      for (int p = 0; p < m; ++p)
+      {
+        for (int q = 0; q < m; ++q)
+        {
+          sum2 += _w[i][s][p][q];
+        }
+      }
+      _model.add(sum2 <= sum);
+      sum2.clear();
+    }
+    sum.clear();
   }
   
   // disable edges not in input trees
@@ -247,7 +367,92 @@ void MCTSolverILP::initConstraints()
     }
   }
   
-  sum.end();
+  // disable edges not in input trees: part 2
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int p = 0; p < m; ++p)
+    {
+      for (int q = 0; q < m; ++q)
+      {
+        for (int i = 0; i < n; ++i)
+        {
+          if (_a[i][p][q])
+          {
+            sum += _x[i][s];
+          }
+        }
+        _model.add(_y[s][p][q] <= sum);
+        sum.clear();
+      }
+    }
+  }
+  
+  // if q has the same parent p in all trees assigned to cluster s
+  // then y[s][p][q] must be 1
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int i = 0; i < n; ++i)
+    {
+      sum += _x[i][s];
+    }
+    
+    for (int p = 0; p < m; ++p)
+    {
+      for (int q = 0; q < m; ++q)
+      {
+        for (int i = 0; i < n; ++i)
+        {
+          sum2 += _x[i][s] * _a[i][p][q];
+        }
+        _model.add(_y[s][p][q] >= sum2 - sum + 1);
+        sum2.clear();
+      }
+    }
+    sum.clear();
+  }
+  
+//  for (int s = 0; s < _k; ++s)
+//  {
+//    for (int p = 0; p < m; ++p)
+//    {
+//      for (int q = 0; q < m; ++q)
+//      {
+//        for (int i = 0; i < n; ++i)
+//        {
+//          sum += _w[i][s][p][q];
+//        }
+//      }
+//    }
+//
+//    if (s > 0)
+//    {
+//      _model.add(sum >= sum2);
+//    }
+//    sum2 = sum;
+//    sum.clear();
+//  }
+  
+  // symmetry breaking
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int i = 0; i < n; ++i)
+    {
+      sum += _x[i][s];
+    }
+    
+    if (s > 0)
+    {
+      _model.add(sum >= sum2);
+    }
+    sum2 = sum;
+    sum.clear();
+  }
+  
+  sum2.end();
+  if (_k > 1)
+  {
+    sum.end();
+  }
 }
 
 void MCTSolverILP::initObjective()
@@ -257,21 +462,41 @@ void MCTSolverILP::initObjective()
   
   IloExpr sum(_env);
   
-  for (int i = 0; i < n; ++i)
+//  for (int i = 0; i < n; ++i)
+//  {
+//    for (int s = 0; s < _k; ++s)
+//    {
+//      for (int p = 0; p < m; ++p)
+//      {
+//        for (int q = 0; q < m; ++q)
+//        {
+//          sum += _w[i][s][p][q];
+//        }
+//      }
+//    }
+//  }
+  
+  for (int s = 0; s < _k; ++s)
   {
-    for (int s = 0; s < _k; ++s)
+    // compute n_s: number of trees in cluster s
+//    for (int i = 0; i < n; ++i)
+//    {
+//      sum += _x[i][s] * (m - 1);
+//    }
+
+    for (int i = 0; i < n; ++i)
     {
       for (int p = 0; p < m; ++p)
       {
         for (int q = 0; q < m; ++q)
         {
-          sum += _w[i][s][p][q];
+          sum -= _w[i][s][p][q];
         }
       }
     }
   }
   
-  _model.add(IloMinimize(_env, sum));
+  _model.add(IloMinimize(_env, 2*n*(m-1) + 2*sum));
   
   sum.end();
 }
@@ -286,10 +511,12 @@ void MCTSolverILP::solve()
   
 //  _model.add(_y[0][1][3] == 1);
 //  _model.add(_y[0][3][1] == 1);
-  
-  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallback(_env, _k, _b,
-                                                                _indexToMutation, _y, _z)));
-  
+  _cplex.exportModel("/tmp/test.lp");
+//  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackLazy(_env, _k, _b,
+//                                                                    _indexToMutation, _y, _z)));
+  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackUser(_env, _k, _b,
+                                                                    _indexToMutation, _y, _z)));
+
 //  try
   {
     if (!_cplex.solve())
@@ -300,6 +527,23 @@ void MCTSolverILP::solve()
 //    std::cerr << e.getMessage() << std::endl;
 //    return;
 //  }
+  
+  std::cerr << "Obj: " << _cplex.getObjValue() << std::endl;
+//  for (int i = 0; i < n; ++i)
+//  {
+//    for (int s = 0; s < _k; ++s)
+//    {
+//      for (int p = 0; p < m; ++p)
+//      {
+//        for (int q = 0; q < m; ++q)
+//        {
+//          std::cerr << _w[i][s][p][q].getName() << " = " << _cplex.getValue(_w[i][s][p][q]) << std::endl;
+//        }
+//      }
+//    }
+//    std::cerr << std::endl;
+//  }
+//  std::cerr << std::endl;
   
   // 1. identify clustering
   _clustering = IntVector(n, -1);
@@ -361,23 +605,23 @@ void MCTSolverILP::solve()
   }
   
   // 3. compute cost
-  for (int s = 0; s < _k; ++s)
-  {
-    int cost = 0;
-    for (int i = 0; i < n; ++i)
-    {
-      for (int p = 0; p < m; ++p)
-      {
-        for (int q = 0; q < m; ++q)
-        {
-          if (_cplex.getValue(_w[i][s][p][q]) >= 0.4)
-          {
-            ++cost;
-          }
-        }
-      }
-    }
-    _cluster2cost[s] = cost;
+//  for (int s = 0; s < _k; ++s)
+//  {
+//    int cost = 0;
+//    for (int i = 0; i < n; ++i)
+//    {
+//      for (int p = 0; p < m; ++p)
+//      {
+//        for (int q = 0; q < m; ++q)
+//        {
+//          if (_cplex.getValue(_w[i][s][p][q]) >= 0.4)
+//          {
+//            ++cost;
+//          }
+//        }
+//      }
+//    }
+//    _cluster2cost[s] = cost;
 //    std::cerr << "Cluster " << s << " -- cost: " << cost << std::endl;
-  }
+//  }
 }

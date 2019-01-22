@@ -12,31 +12,30 @@
 #include <lemon/hao_orlin.h>
 #include "utils.h"
 
-class MctSolverIlpCallback : public IloCplex::LazyConstraintCallbackI
+class MctSolverIlpCallback
 {
 public:
+  typedef IloArray<IloNumVarArray> IloNumVarMatrix;
+  typedef IloArray<IloNumVarMatrix> IloNumVar3Matrix;
+  typedef IloArray<IloNumVar3Matrix> IloNumVar4Matrix;
   typedef IloArray<IloBoolVarArray> IloBoolVarMatrix;
   typedef IloArray<IloBoolVarMatrix> IloBoolVar3Matrix;
   typedef IloArray<IloBoolVar3Matrix> IloBoolVar4Matrix;
   
-  MctSolverIlpCallback(IloEnv env,
-                       int k,
+  MctSolverIlpCallback(int k,
                        const BoolMatrix& b,
                        const StringVector& indexToMutation,
-                       IloBoolVar3Matrix y,
-                       IloBoolVarMatrix z);
+                       IloNumVar3Matrix y,
+                       IloNumVarMatrix z);
   
   MctSolverIlpCallback(const MctSolverIlpCallback& other);
   
-  IloCplex::CallbackI *duplicateCallback() const
-  {
-    return (new (getEnv()) MctSolverIlpCallback(*this));
-  }
+protected:
+  void separate(IloEnv env);
+  void init(IloEnv env);
   
-  void main();
-  
-private:
-  void init();
+  virtual void updateVarsVals() = 0;
+  virtual void addConstraint(IloExpr expr) = 0;
   
   void writeDOT(std::ostream& out) const;
 
@@ -63,8 +62,6 @@ private:
     return _k*m*m + s * m + p;
   }
   
-  /// Environment
-  IloEnv _env;
   /// Number of clusters
   const int _k;
   /// b[p][q] = 1 iff there exists a tree i with directed edge (p,q)
@@ -72,14 +69,15 @@ private:
   /// Index to mutation
   const StringVector& _indexToMutation;
   
-  IloBoolVarArray _variables;
+  /// y[s][p][q] = 1 iff mutation p is the parent of mutation q in cluster s
+  IloNumVar3Matrix _y;
+  /// z[s][p] = 1 iff mutation p is the root of cluster s
+  IloNumVarMatrix _z;
+
+  
+  IloNumVarArray _variables;
   
   IloNumArray _values;
-  
-  /// y[s][p][q] = 1 iff mutation p is the parent of mutation q in cluster s
-  IloBoolVar3Matrix _y;
-  /// z[s][p] = 1 iff mutation p is the root of cluster s
-  IloBoolVarMatrix _z;
   
   Digraph _G;
   
@@ -96,6 +94,10 @@ private:
   lemon::HaoOrlin<Digraph, DoubleArcMap> _minCutAlg;
   
   BoolNodeMap _cutMap;
+  
+  int _nodeNumber;
+  
+  int _cutCount;
 };
 
 #endif // MCTSOLVERILPCALLBACK_H

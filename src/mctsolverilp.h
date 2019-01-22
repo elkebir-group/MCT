@@ -33,6 +33,9 @@ private:
   void initConstraints();
   void initObjective();
   
+  typedef IloArray<IloNumVarArray> IloNumVarMatrix;
+  typedef IloArray<IloNumVarMatrix> IloNumVar3Matrix;
+  typedef IloArray<IloNumVar3Matrix> IloNumVar4Matrix;
   typedef IloArray<IloBoolVarArray> IloBoolVarMatrix;
   typedef IloArray<IloBoolVarMatrix> IloBoolVar3Matrix;
   typedef IloArray<IloBoolVar3Matrix> IloBoolVar4Matrix;
@@ -56,11 +59,11 @@ private:
   /// x[i][s] = 1 iff tree i assigned to cluster s
   IloBoolVarMatrix _x;
   /// y[s][p][q] = 1 iff mutation p is the parent of mutation q in cluster s
-  IloBoolVar3Matrix _y;
+  IloNumVar3Matrix _y;
   /// z[s][p] = 1 iff mutation p is the root of cluster s
-  IloBoolVarMatrix _z;
+  IloNumVarMatrix _z;
   /// w[i][s][p][q] = x[i][s] * |a[i][p][q] - y[s][p][q])|
-  IloBoolVar4Matrix _w;
+  IloNumVar4Matrix _w;
 };
 
 #endif // MCTSOLVERBF_H

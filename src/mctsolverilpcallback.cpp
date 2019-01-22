@@ -7,20 +7,18 @@
 
 #include "mctsolverilpcallback.h"
 
-MctSolverIlpCallback::MctSolverIlpCallback(IloEnv env,
-                                           int k,
+MctSolverIlpCallback::MctSolverIlpCallback(int k,
                                            const BoolMatrix& b,
                                            const StringVector& indexToMutation,
-                                           IloBoolVar3Matrix y,
-                                           IloBoolVarMatrix z)
-  : IloCplex::LazyConstraintCallbackI(env)
-  , _env(env)
-  , _k(k)
+                                           IloNumVar3Matrix y,
+                                           IloNumVarMatrix z)
+  : _k(k)
   , _b(b)
   , _indexToMutation(indexToMutation)
+  , _y(y)
+  , _z(z)
   , _variables()
   , _values()
-  , _z(z)
   , _G()
   , _root(lemon::INVALID)
   , _mutationToNode()
@@ -29,42 +27,17 @@ MctSolverIlpCallback::MctSolverIlpCallback(IloEnv env,
   , _arcCost(_G)
   , _minCutAlg(_G, _arcCost)
   , _cutMap(_G)
+  , _nodeNumber(-1)
+  , _cutCount(0)
 {
-  const int m = _b.size();
-  
-  _variables = IloBoolVarArray(_env, _k*m*m + _k*m);
-  for (int s = 0; s < _k; ++s)
-  {
-    for (int p = 0; p < m; ++p)
-    {
-      for (int q = 0; q < m; ++q)
-      {
-        int idx = getIndex(s, p, q);
-        _variables[idx] = y[s][p][q];
-      }
-    }
-  }
-  
-  for (int s = 0; s < _k; ++s)
-  {
-    for (int p = 0; p < m; ++p)
-    {
-      int idx = getIndex(s, p);
-      _variables[idx] = z[s][p];
-    }
-  }
-  
-  _values = IloNumArray(_env, _k*m*m + _k*m);
-  
-  init();
 }
 
 MctSolverIlpCallback::MctSolverIlpCallback(const MctSolverIlpCallback& other)
-  : IloCplex::LazyConstraintCallbackI(other)
-  , _env(other._env)
-  , _k(other._k)
+  : _k(other._k)
   , _b(other._b)
   , _indexToMutation(other._indexToMutation)
+  , _y(other._y)
+  , _z(other._z)
   , _variables(other._variables)
   , _values(other._values)
   , _G()
@@ -75,13 +48,38 @@ MctSolverIlpCallback::MctSolverIlpCallback(const MctSolverIlpCallback& other)
   , _arcCost(_G)
   , _minCutAlg(_G, _arcCost)
   , _cutMap(_G)
+  , _nodeNumber(-1)
+  , _cutCount(0)
 {
-  init();
 }
 
-void MctSolverIlpCallback::init()
+void MctSolverIlpCallback::init(IloEnv env)
 {
   const int m = _b.size();
+  
+  _variables = IloNumVarArray(env, _k*m*m + _k*m);
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int p = 0; p < m; ++p)
+    {
+      for (int q = 0; q < m; ++q)
+      {
+        int idx = getIndex(s, p, q);
+        _variables[idx] = _y[s][p][q];
+      }
+    }
+  }
+  
+  for (int s = 0; s < _k; ++s)
+  {
+    for (int p = 0; p < m; ++p)
+    {
+      int idx = getIndex(s, p);
+      _variables[idx] = _z[s][p];
+    }
+  }
+  
+  _values = IloNumArray(env, _k*m*m + _k*m);
   
   _root = _G.addNode();
   _nodeToMutation[_root] = -1;
@@ -144,11 +142,11 @@ void MctSolverIlpCallback::writeDOT(std::ostream& out) const
   out << "}" << std::endl;
 }
 
-void MctSolverIlpCallback::main()
+void MctSolverIlpCallback::separate(IloEnv env)
 {
-  getValues(_values, _variables);
+  updateVarsVals();
   
-  IloExpr sum(_env);
+  IloExpr sum(env);
   
   for (int s = 0; s < _k; ++s)
   {
@@ -203,7 +201,8 @@ void MctSolverIlpCallback::main()
           }
         }
       }
-      add(1 <= sum).end();
+      addConstraint(sum);
+//      add(1 <= sum).end();
     }
   }
   

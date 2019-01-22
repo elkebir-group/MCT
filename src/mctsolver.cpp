@@ -31,7 +31,7 @@ void MCTSolver::run(MCTSolver& solver,
   solver.solve();
   {
     std::ofstream outFile;
-    outFile.open(outputPrefix + "_clustering.csv", std::ios_base::app);
+    outFile.open(outputPrefix + "_clustering.csv");
     solver.writeClustering(outFile);
   }
   
