@@ -17,7 +17,10 @@ public:
   ///
   /// @param ctv Input clone trees
   /// @param k Number of clusters
-  MCTSolverBF(const CloneTreeVector& ctv, int k, int timelimit);
+  /// @param timeLimit Time limit in seconds
+  MCTSolverBF(const CloneTreeVector& ctv,
+              int k,
+              int timeLimit);
 
   virtual void solve();
   
@@ -29,7 +32,5 @@ public:
 private:
   bool next(IntVector& clustering);
 };
-
-void pp(std::vector<int>& curr);
 
 #endif // MCTSOLVERBF_H

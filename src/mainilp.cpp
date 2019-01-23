@@ -28,9 +28,9 @@ int main(int argc, char** argv)
   ap.refOption("p", "Path to results (make it unique)", resultspath, true);
   ap.refOption("c", "Clustering", clusteringStr);
   ap.refOption("v", "Verbose output (default: False)", verbose);
-  ap.refOption("t", "Number of threads (default: 1)", nrThreads);
-  ap.refOption("tl", "Time limit in seconds (default: -1, no time limit)", timeLimit);
-  ap.refOption("ml", "Memory limit in MB (default: -1, no memory limit)", memoryLimit);
+  ap.refOption("T", "Number of threads (default: 1)", nrThreads);
+  ap.refOption("t", "Time limit in seconds (default: -1, no time limit)", timeLimit);
+  ap.refOption("m", "Memory limit in MB (default: -1, no memory limit)", memoryLimit);
   ap.parse();
   
   if (ap.files().size() != 1){

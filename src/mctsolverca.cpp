@@ -7,30 +7,51 @@
 
 #include "mctsolverca.h"
 
-MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed, int timelimit)
-: MCTSolver(ctv, k, timelimit)
-  , _r(r)
-  , _seed(seed){
+MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv,
+                         int k,
+                         int timeLimit,
+                         int nrMaxRestarts)
+  : MCTSolver(ctv, k, timeLimit)
+  , _nrMaxRestarts(nrMaxRestarts)
+  , _nrRestarts(0)
+{
   init();
 }
 
-void MCTSolverCA::init(){
-  srand(_seed);
-  assert(_k >= 1);
+void MCTSolverCA::writeSummaryHeader(std::ostream& out, bool newLine) const
+{
+  MCTSolver::writeSummaryHeader(out, false);
+  out << "\t" << "restarts" << std::endl;
+}
+
+void MCTSolverCA::writeSummary(std::ostream& out, bool newLine) const
+{
+  MCTSolver::writeSummary(out, false);
+  out << "\t" << _nrRestarts << std::endl;
+}
+
+void MCTSolverCA::init()
+{
   generateInitialClustering();
 }
 
-void MCTSolverCA::updateClustering(){
+void MCTSolverCA::updateClustering()
+{
   assert(_cluster2trees.size() != 0);
+  
   resetClustering();
-  for(int i = 0; i < _ctv.size(); i++){
-    int bestCluster = 0;
-    int bestDist = INT_MAX;
-    for (auto it = _cluster2consensus.begin(); it != _cluster2consensus.end(); it++ ){
-      int dist = (*it)->parentChildDistance(_ctv[i]);
-      if (dist < bestDist){
+  for(int i = 0; i < _ctv.size(); i++)
+  {
+    int bestCluster = -1;
+    int bestDist = std::numeric_limits<int>::max();
+    
+    for (int s = 0; s < _k; ++s)
+    {
+      int dist = _cluster2consensus[s]->parentChildDistance(_ctv[i]);
+      if (dist < bestDist)
+      {
         bestDist = dist;
-        bestCluster =it-_cluster2consensus.begin();
+        bestCluster = s;
       }
     }
     _cluster2trees[bestCluster].insert(i);
@@ -38,50 +59,58 @@ void MCTSolverCA::updateClustering(){
   }
 }
 
-void pp(std::vector<int>& curr){
-  std::cout << "Initial clustering is: " ;
-  for (std::vector<int>::iterator it = curr.begin(); it != curr.end(); ++it)
-    std::cout << ' ' << *it;
-  std::cout << '\n';
-}
-
-std::vector<int> MCTSolverCA::generateInitialClustering(){
-  while(true){
+void MCTSolverCA::generateInitialClustering()
+{
+  assert(_k >= 1);
+  
+  std::uniform_int_distribution<> unif(0, _k - 1);
+  
+  while(true)
+  {
     resetClustering();
+    
     IntVector clustering;
-    IntVector check(_k,0);
-    for (int i = 0; i < getNumTrees(); i++){
+    IntVector check(_k, 0);
+    for (int i = 0; i < getNumTrees(); i++)
+    {
       // assign each tree to a random cluster
-      int cluster = rand() % _k;
+      int cluster = unif(g_rng);
       clustering.push_back(cluster);
       check[cluster]++;
     }
+    
     bool valid = true;
-    for(int i: check){
-      if (i == 0){
+    for (int i: check)
+    {
+      if (i == 0)
+      {
         valid = false;
       }
     }
-    if (valid){
+    if (valid)
+    {
       setClustering(clustering);
-      return clustering;
+      return;
     }
   }
 }
 
-void MCTSolverCA::solve(){
-  int minCost = INT_MAX;
-  std::vector<int> bestClustering;
+void MCTSolverCA::solve()
+{
+  int minCost = std::numeric_limits<int>::max();
+  IntVector bestClustering;
   
-  int i = 0;
-  auto start = std::chrono::high_resolution_clock::now();
-  seconds_type t(_timelimit);
+  _nrRestarts = 0;
+  SecondsType timeLimit(_timeLimit);
   
-  while(true){
-    IntVector currClustering = generateInitialClustering();
+  while (true)
+  {
+    generateInitialClustering();
+    IntVector currClustering = _clustering;
     
     int currCost = -1;
-    while(true){
+    while (true)
+    {
       generateParentChildGraphs();
       generateConsensusTrees();
       updateClustering();
@@ -94,29 +123,31 @@ void MCTSolverCA::solve(){
       currCost = newCost;
       currClustering = newClustering;
     }
-    if (currCost < minCost){
+    
+    if (currCost < minCost)
+    {
       minCost = currCost;
       bestClustering = currClustering;
     }
     
-    if (_r > 0 && i == _r){
+    if (_nrMaxRestarts > 0 && _nrRestarts == _nrMaxRestarts)
+    {
       break;
     }
-    i++;
-    if (_r == 0){
+    _nrRestarts++;
+    
+    if (_nrMaxRestarts <= 0)
+    {
       auto finish = std::chrono::high_resolution_clock::now();
-      if (finish - start >= t){
+      if (finish - _startTimePoint >= timeLimit)
+      {
         break;
       }
     }
-    
   }
-  
-  //  std::cout << "min cost achieved: " << minCost << std::endl;
   
   setClustering(bestClustering);
   generateParentChildGraphs();
   generateConsensusTrees();
   updateClusteringCost();
 }
-

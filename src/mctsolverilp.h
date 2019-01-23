@@ -36,6 +36,10 @@ public:
     return "ILP";
   }
   
+  virtual void writeSummaryHeader(std::ostream& out, bool newLine) const;
+  
+  virtual void writeSummary(std::ostream& out, bool newLine) const;
+  
 private:
   void init();
   void initVariables();
@@ -51,14 +55,12 @@ private:
   typedef std::vector<BoolMatrix> BoolTensor;
   
 private:
-  /// Time limit in seconds
-  int _timeLimit;
   /// Memory limit in MB
-  int _memoryLimit;
+  const int _memoryLimit;
   /// Number of threads
-  int _nrThreads;
+  const int _nrThreads;
   /// Verbose output
-  bool _verbose;
+  const bool _verbose;
   /// Environment
   IloEnv _env;
   /// CPlex model
@@ -81,6 +83,10 @@ private:
   IloNumVarMatrix _z;
   /// w[i][s][p][q] = x[i][s] * |a[i][p][q] - y[s][p][q])|
   IloNumVar4Matrix _w;
+  /// Lower bound
+  double _LB;
+  /// Upper bound
+  double _UB;
 };
 
 #endif // MCTSOLVERBF_H

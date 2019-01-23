@@ -17,7 +17,8 @@ public:
   ///
   /// @param ctv Input clone trees
   /// @param k Number of clusters
-  MCTSolver(const CloneTreeVector& ctv, int k, int timelimit);
+  /// @param timeLimit Time limit in seconds
+  MCTSolver(const CloneTreeVector& ctv, int k, int timeLimit);
   
   /// Destructor
   virtual ~MCTSolver();
@@ -77,7 +78,9 @@ public:
     return _cluster2cost[j];
   }
   
-  virtual void writeSummary(std::ostream& out, double secs_elapsed) const;
+  virtual void writeSummaryHeader(std::ostream& out, bool newLine) const;
+  
+  virtual void writeSummary(std::ostream& out, bool newLine) const;
   
   virtual std::string getMethodName() const = 0;
   
@@ -96,6 +99,8 @@ protected:
   const CloneTreeVector& _ctv;
   /// Number of clusters
   const int _k;
+  /// Starting time point
+  const TimePointType _startTimePoint;
   /// Sum of distances between each input tree and its corresponding consensus tree
   int _clusteringCost;
   /// Set of input tree indices for each cluster
@@ -111,7 +116,7 @@ protected:
   /// Output prefix
   std::string _id;
   /// Timelimit for the algorithm to run
-  int _timelimit;
+  int _timeLimit;
 };
 
 #endif // MCTSOLVER_H

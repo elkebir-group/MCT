@@ -97,7 +97,8 @@ typedef SubDigraph::NodeIt SubNodeIt;
 typedef SubDigraph::OutArcIt SubOutArcIt;
 typedef SubDigraph::InArcIt SubInArcIt;
 
-typedef std::chrono::duration<int> seconds_type;
+typedef std::chrono::duration<int> SecondsType;
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> TimePointType;
 
 /// Verbosity level
 typedef enum

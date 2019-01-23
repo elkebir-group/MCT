@@ -15,8 +15,7 @@ MCTSolverILP::MCTSolverILP(const CloneTreeVector& ctv,
                            int memoryLimit,
                            int nrThreads,
                            bool verbose)
-  : MCTSolver(ctv, k)
-  , _timeLimit(timeLimit)
+  : MCTSolver(ctv, k, timeLimit)
   , _memoryLimit(memoryLimit)
   , _nrThreads(nrThreads)
   , _verbose(verbose)
@@ -31,8 +30,22 @@ MCTSolverILP::MCTSolverILP(const CloneTreeVector& ctv,
   , _y()
   , _z()
   , _w()
+  , _LB(0)
+  , _UB(0)
 {
   init();
+}
+
+void MCTSolverILP::writeSummaryHeader(std::ostream& out, bool newLine) const
+{
+  MCTSolver::writeSummaryHeader(out, false);
+  out << "\t" << "LB" << "\t" << "UB" << std::endl;
+}
+
+void MCTSolverILP::writeSummary(std::ostream& out, bool newLine) const
+{
+  MCTSolver::writeSummary(out, false);
+  out << "\t" << _LB << "\t" << _UB << std::endl;
 }
 
 void MCTSolverILP::init()
@@ -555,7 +568,9 @@ void MCTSolverILP::solve()
 //    return;
 //  }
   
-  std::cerr << "Obj: " << _cplex.getObjValue() << std::endl;
+  _LB = _cplex.getBestObjValue();
+  _UB = _cplex.getObjValue();
+  
 //  for (int i = 0; i < n; ++i)
 //  {
 //    for (int s = 0; s < _k; ++s)
@@ -596,7 +611,7 @@ void MCTSolverILP::solve()
   // update _cluster2totaltrees
   for (int s = 0; s < _k; ++s)
   {
-    _cluster2totaltrees[s] = _cluster2trees.size();
+    _cluster2totaltrees[s] = _cluster2trees[s].size();
   }
   
   generateParentChildGraphs();
@@ -629,26 +644,15 @@ void MCTSolverILP::solve()
     }
     
     _cluster2consensus[s]->setMstCost(mstCost);
+    
+    CloneTreeVector ctv_s;
+    for (int i : _cluster2trees[s])
+    {
+      ctv_s.push_back(_ctv[i]);
+    }
+    _cluster2cost[s] = _cluster2consensus[s]->clusteringCost(ctv_s);
   }
   
   // 3. compute cost
-//  for (int s = 0; s < _k; ++s)
-//  {
-//    int cost = 0;
-//    for (int i = 0; i < n; ++i)
-//    {
-//      for (int p = 0; p < m; ++p)
-//      {
-//        for (int q = 0; q < m; ++q)
-//        {
-//          if (_cplex.getValue(_w[i][s][p][q]) >= 0.4)
-//          {
-//            ++cost;
-//          }
-//        }
-//      }
-//    }
-//    _cluster2cost[s] = cost;
-//    std::cerr << "Cluster " << s << " -- cost: " << cost << std::endl;
-//  }
+  _clusteringCost = _UB;
 }

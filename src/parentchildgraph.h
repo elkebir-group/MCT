@@ -111,11 +111,6 @@ public:
     return res;
   }
   
-  int getCost() const
-  {
-    return _mstCost;
-  }
-  
   int getArcCost(Arc a) const
   {
     return _arcCost[a];

@@ -7,9 +7,10 @@
 
 #include "mctsolver.h"
 
-MCTSolver::MCTSolver(const CloneTreeVector& ctv, int k, int timelimit)
+MCTSolver::MCTSolver(const CloneTreeVector& ctv, int k, int timeLimit)
   : _ctv(ctv)
   , _k(k)
+  , _startTimePoint(std::chrono::high_resolution_clock::now())
   , _clusteringCost(-1)
   , _cluster2trees(k)
   , _cluster2consensus(k)
@@ -17,7 +18,7 @@ MCTSolver::MCTSolver(const CloneTreeVector& ctv, int k, int timelimit)
   , _cluster2totaltrees(k)
   , _clustering()
   , _id()
-  , _timelimit(timelimit)
+  , _timeLimit(timeLimit)
 {
 }
 
@@ -29,25 +30,22 @@ MCTSolver::~MCTSolver()
 void MCTSolver::run(MCTSolver& solver,
                     const std::string& outputPrefix)
 {
-  auto start = std::chrono::high_resolution_clock::now();
   solver.solve();
-  auto finish = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> diff = finish - start;
-  double secs_elapsed = diff.count();
-  std::cout << secs_elapsed << "s elapsed" << std::endl;
+  
   {
     std::ofstream outFile;
-    outFile.open(outputPrefix + "_clustering.csv");
+    outFile.open(outputPrefix + "_clustering.txt");
     solver.writeClustering(outFile);
   }
   
   {
     std::ofstream outFile;
-    outFile.open(outputPrefix + "_summary.csv", std::ios_base::app);
-    solver.writeSummary(outFile, secs_elapsed);
+    outFile.open(outputPrefix + "_summary.tsv");
+    solver.writeSummaryHeader(outFile, true);
+    solver.writeSummary(outFile, true);
   }
     
-  solver.displayConsensusTrees();
+//  solver.displayConsensusTrees();
   
   char buf[1024];
   for (int j = 0; j < solver._k; ++j)
@@ -134,8 +132,7 @@ void MCTSolver::updateClusteringCost()
       ctvcopy.push_back(_ctv[idx]);
     }
     int idx = it - _cluster2trees.begin();
-    _cluster2cost[idx] = _cluster2consensus[idx] ->
-    clusteringCost(ctvcopy);
+    _cluster2cost[idx] = _cluster2consensus[idx]->clusteringCost(ctvcopy);
     _cluster2totaltrees[idx] = ctvcopy.size();
     _clusteringCost += _cluster2cost[idx];
   }
@@ -164,19 +161,42 @@ void MCTSolver::writeClustering(std::ostream& out) const
   for (const auto &e : _clustering) out << e << "\n";
 }
 
-void MCTSolver::writeSummary(std::ostream& out, double secs_elapsed) const
+void MCTSolver::writeSummaryHeader(std::ostream& out, bool newLine) const
 {
-  out << getMethodName() << " " << secs_elapsed << " " << _k << " " << getClusteringCost() << " ";
+  out << "method\ttime\tk\tcost";
+  for (int s = 0; s < _k; ++s)
+  {
+    out << "\tcost-" << s;
+  }
+  out << "\ttrees";
+  for (int s = 0; s < _k; ++s)
+  {
+    out << "\ttrees-" << s;
+  }
+  
+  if (newLine)
+  {
+    out << std::endl;
+  }
+}
+
+void MCTSolver::writeSummary(std::ostream& out, bool newLine) const
+{
+  auto finish = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> diff = finish - _startTimePoint;
+  double secondsElapsed = diff.count();
+  
+  out << getMethodName() << "\t" << secondsElapsed << "\t" << _k << "\t " << getClusteringCost() << "\t";
   for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();)
   {
     out << *it;
     it++;
     if (it != getCluster2Cost().end())
     {
-      out << ",";
+      out << "\t";
     }
   }
-  out << " ";
+  out << "\t";
   for (auto it = getCluster2TotalTrees().begin();
        it != getCluster2TotalTrees().end();)
   {
@@ -184,8 +204,12 @@ void MCTSolver::writeSummary(std::ostream& out, double secs_elapsed) const
     it++;
     if (it != getCluster2TotalTrees().end())
     {
-      out << ",";
+      out << "\t";
     }
   }
-  out << std::endl;
+  
+  if (newLine)
+  {
+    out << std::endl;
+  }
 }
