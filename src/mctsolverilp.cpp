@@ -9,8 +9,17 @@
 #include "mctsolverilpcallbacklazy.h"
 #include "mctsolverilpcallbackuser.h"
 
-MCTSolverILP::MCTSolverILP(const CloneTreeVector& ctv, int k)
+MCTSolverILP::MCTSolverILP(const CloneTreeVector& ctv,
+                           int k,
+                           int timeLimit,
+                           int memoryLimit,
+                           int nrThreads,
+                           bool verbose)
   : MCTSolver(ctv, k)
+  , _timeLimit(timeLimit)
+  , _memoryLimit(memoryLimit)
+  , _nrThreads(nrThreads)
+  , _verbose(verbose)
   , _env()
   , _model(_env)
   , _cplex(_model)
@@ -503,15 +512,33 @@ void MCTSolverILP::initObjective()
 
 void MCTSolverILP::solve()
 {
-  const int n = _ctv.size();
-  const int m = lemon::countNodes(_ctv[0].tree());
+  if (_nrThreads > 0)
+  {
+    _cplex.setParam(IloCplex::Threads, _nrThreads);
+  }
+  if (_timeLimit > 0)
+  {
+    _cplex.setParam(IloCplex::TiLim, _timeLimit);
+  }
+  if (_memoryLimit > 0)
+  {
+    _cplex.setParam(IloCplex::WorkMem, _memoryLimit);
+  }
+  if (!_verbose)
+  {
+    _cplex.setOut(_env.getNullStream());
+    _cplex.setError(_env.getNullStream());
+    _cplex.setWarning(_env.getNullStream());
+  }
   
+  const int n = _ctv.size();
+//  const int m = lemon::countNodes(_ctv[0].tree());
 //  std::cerr << _y[0][1][3].getName() << std::endl;
 //  std::cerr << _y[0][3][1].getName() << std::endl;
   
 //  _model.add(_y[0][1][3] == 1);
 //  _model.add(_y[0][3][1] == 1);
-  _cplex.exportModel("/tmp/test.lp");
+//  _cplex.exportModel("/tmp/test.lp");
 //  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackLazy(_env, _k, _b,
 //                                                                    _indexToMutation, _y, _z)));
   _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackUser(_env, _k, _b,

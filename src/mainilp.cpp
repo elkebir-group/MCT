@@ -17,11 +17,20 @@ int main(int argc, char** argv)
   std::string resultspath;
   std::string clusteringStr;
   
+  int timeLimit = -1;
+  int memoryLimit = -1;
+  int nrThreads = 1;
+  bool verbose = false;
+  
   lemon::ArgParser ap (argc, argv);
   ap.other("trees", "Input trees");
   ap.refOption("k", "Number of clusters", k, true);
   ap.refOption("p", "Path to results (make it unique)", resultspath, true);
   ap.refOption("c", "Clustering", clusteringStr);
+  ap.refOption("v", "Verbose output (default: False)", verbose);
+  ap.refOption("t", "Number of threads (default: 1)", nrThreads);
+  ap.refOption("tl", "Time limit in seconds (default: -1, no time limit)", timeLimit);
+  ap.refOption("ml", "Memory limit in MB (default: -1, no memory limit)", memoryLimit);
   ap.parse();
   
   if (ap.files().size() != 1){
@@ -51,7 +60,7 @@ int main(int argc, char** argv)
     return 1;
   }
   
-  MCTSolverILP solver(ctv, k);
+  MCTSolverILP solver(ctv, k, timeLimit, memoryLimit, nrThreads, verbose);
   
   if (clusteringStr.empty()){
     MCTSolver::run(solver, resultspath);

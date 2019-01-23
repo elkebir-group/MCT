@@ -18,7 +18,16 @@ public:
   ///
   /// @param ctv Input clone trees
   /// @param k Number of clusters
-  MCTSolverILP(const CloneTreeVector& ctv, int k);
+  /// @param timeLimit Time limit in seconds
+  /// @param memoryLimit Memory limit in MB
+  /// @param nrThreads Number of threads
+  /// @param verbose Indicates whether verbose output should be generated
+  MCTSolverILP(const CloneTreeVector& ctv,
+               int k,
+               int timeLimit,
+               int memoryLimit,
+               int nrThreads,
+               bool verbose);
   
   virtual void solve();
   
@@ -42,6 +51,14 @@ private:
   typedef std::vector<BoolMatrix> BoolTensor;
   
 private:
+  /// Time limit in seconds
+  int _timeLimit;
+  /// Memory limit in MB
+  int _memoryLimit;
+  /// Number of threads
+  int _nrThreads;
+  /// Verbose output
+  bool _verbose;
   /// Environment
   IloEnv _env;
   /// CPlex model
