@@ -37,7 +37,7 @@ void MCTSolver::run(MCTSolver& solver,
   std::cout << secs_elapsed << "s elapsed" << std::endl;
   {
     std::ofstream outFile;
-    outFile.open(outputPrefix + "_clustering.csv", std::ios_base::app);
+    outFile.open(outputPrefix + "_clustering.csv");
     solver.writeClustering(outFile);
   }
   

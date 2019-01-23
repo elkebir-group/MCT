@@ -1,37 +1,37 @@
 /*
- * mctsolverilpcallbackuser.cpp
+ * mctsolverilpcallbacklazy.cpp
  *
- *  Created on: 20-jan-2019
+ *  Created on: 21-jan-2019
  *      Author: M. El-Kebir
  */
 
-#include "mctsolverilpcallbackuser.h"
+#include "mctsolverilpcallbacklazy.h"
 
-MctSolverIlpCallbackUser::MctSolverIlpCallbackUser(IloEnv env,
+MctSolverIlpCallbackLazy::MctSolverIlpCallbackLazy(IloEnv env,
                                                    int k,
                                                    const BoolMatrix& b,
                                                    const StringVector& indexToMutation,
                                                    IloNumVar3Matrix y,
                                                    IloNumVarMatrix z)
   : MctSolverIlpCallback(k, b, indexToMutation, y, z)
-  , IloCplex::UserCutCallbackI(env)
+  , IloCplex::LazyConstraintCallbackI(env)
 {
   init(getEnv());
 }
 
-MctSolverIlpCallbackUser::MctSolverIlpCallbackUser(const MctSolverIlpCallbackUser& other)
+MctSolverIlpCallbackLazy::MctSolverIlpCallbackLazy(const MctSolverIlpCallbackLazy& other)
   : MctSolverIlpCallback(other)
-  , IloCplex::UserCutCallbackI(other)
+  , IloCplex::LazyConstraintCallbackI(other)
 {
   init(getEnv());
 }
 
-void MctSolverIlpCallbackUser::updateVarsVals()
+void MctSolverIlpCallbackLazy::updateVarsVals()
 {
   getValues(_values, _variables);
 }
 
-void MctSolverIlpCallbackUser::addConstraint(IloExpr expr)
+void MctSolverIlpCallbackLazy::addConstraint(IloExpr expr)
 {
-  add(1 <= expr, IloCplex::UseCutPurge).end();
+  add(1 <= expr).end();
 }

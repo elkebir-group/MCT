@@ -118,6 +118,7 @@ if (CPLEX)
     src/mctsolverilp.cpp
     src/mctsolverilpcallback.cpp
     src/mctsolverilpcallbackuser.cpp
+    src/mctsolverilpcallbacklazy.cpp
   )
 
   set (mctpilp_hdr
@@ -128,6 +129,7 @@ if (CPLEX)
     src/mctsolverilp.h
     src/mctsolverilpcallback.h
     src/mctsolverilpcallbackuser.h
+    src/mctsolverilpcallbacklazy.h
     src/mctsolver.h
   )
 endif()

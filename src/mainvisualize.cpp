@@ -13,7 +13,9 @@
 
 int main(int argc, char** argv)
 {
+  bool allArcs = false;
   lemon::ArgParser ap (argc, argv);
+  ap.refOption("a", "Show all arcs", allArcs);
   ap.other("trees", "Input trees");
   ap.other("clustering", "Clustering");
   ap.parse();
@@ -81,7 +83,7 @@ int main(int argc, char** argv)
   inClustering.close();
   
   Visualize viz(ctv, clustering, k);
-  viz.writeDOT(std::cout, true);
+  viz.writeDOT(std::cout, allArcs);
   
   return 0;
 }
