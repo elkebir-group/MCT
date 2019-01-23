@@ -7,12 +7,14 @@
 int main(int argc, char** argv){
   
   int k = 0;
+  int timelimit = 10;
   std::string resultspath;
   std::string clusteringStr;
   
   lemon::ArgParser ap (argc, argv);
   ap.other("trees", "Input trees");
   ap.refOption("k", "Number of clusters", k, true);
+  ap.refOption("t", "Time limit in seconds (default: 10)", timelimit);
   ap.refOption("p", "Path to results (make it unique)", resultspath, true);
   ap.refOption("c", "Clustering", clusteringStr);
   ap.parse();
@@ -44,7 +46,7 @@ int main(int argc, char** argv){
     return 1;
   }
   
-  MCTSolverBF solver(ctv, k);
+  MCTSolverBF solver(ctv, k, timelimit);
   
   if (clusteringStr.empty()){
     MCTSolver::run(solver, resultspath);

@@ -7,8 +7,8 @@
 
 #include "mctsolverca.h"
 
-MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed)
-: MCTSolver(ctv, k)
+MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed, int timelimit)
+: MCTSolver(ctv, k, timelimit)
   , _r(r)
   , _seed(seed){
   init();
@@ -72,9 +72,14 @@ std::vector<int> MCTSolverCA::generateInitialClustering(){
 void MCTSolverCA::solve(){
   int minCost = INT_MAX;
   std::vector<int> bestClustering;
-  for (int i = 0; i < _r; i++){
+  
+  int i = 0;
+  auto start = std::chrono::high_resolution_clock::now();
+  seconds_type t(_timelimit);
+  
+  while(true){
     IntVector currClustering = generateInitialClustering();
-
+    
     int currCost = -1;
     while(true){
       generateParentChildGraphs();
@@ -93,7 +98,20 @@ void MCTSolverCA::solve(){
       minCost = currCost;
       bestClustering = currClustering;
     }
+    
+    if (_r > 0 && i == _r){
+      break;
+    }
+    i++;
+    if (_r == 0){
+      auto finish = std::chrono::high_resolution_clock::now();
+      if (finish - start >= t){
+        break;
+      }
+    }
+    
   }
+  
   //  std::cout << "min cost achieved: " << minCost << std::endl;
   
   setClustering(bestClustering);

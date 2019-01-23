@@ -17,7 +17,7 @@ public:
   ///
   /// @param ctv Input clone trees
   /// @param k Number of clusters
-  MCTSolver(const CloneTreeVector& ctv, int k);
+  MCTSolver(const CloneTreeVector& ctv, int k, int timelimit);
   
   /// Destructor
   virtual ~MCTSolver();
@@ -77,7 +77,7 @@ public:
     return _cluster2cost[j];
   }
   
-  virtual void writeSummary(std::ostream& out) const;
+  virtual void writeSummary(std::ostream& out, double secs_elapsed) const;
   
   virtual std::string getMethodName() const = 0;
   
@@ -110,6 +110,8 @@ protected:
   std::vector<int> _clustering;
   /// Output prefix
   std::string _id;
+  /// Timelimit for the algorithm to run
+  int _timelimit;
 };
 
 #endif // MCTSOLVER_H

@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <random>
 #include <fstream>
+#include <chrono>
 
 typedef lemon::ListDigraph Digraph;
 typedef lemon::ListGraph Graph;
@@ -95,6 +96,8 @@ typedef SubDigraph::ArcIt SubArcIt;
 typedef SubDigraph::NodeIt SubNodeIt;
 typedef SubDigraph::OutArcIt SubOutArcIt;
 typedef SubDigraph::InArcIt SubInArcIt;
+
+typedef std::chrono::duration<int> seconds_type;
 
 /// Verbosity level
 typedef enum

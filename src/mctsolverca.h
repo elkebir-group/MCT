@@ -11,7 +11,7 @@
 
 class MCTSolverCA: public MCTSolver{
 public:
-  MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed);
+  MCTSolverCA(const CloneTreeVector& ctv, int k, int r, int seed, int timelimit);
 
   virtual void solve();
   

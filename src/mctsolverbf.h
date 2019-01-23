@@ -17,7 +17,7 @@ public:
   ///
   /// @param ctv Input clone trees
   /// @param k Number of clusters
-  MCTSolverBF(const CloneTreeVector& ctv, int k);
+  MCTSolverBF(const CloneTreeVector& ctv, int k, int timelimit);
 
   virtual void solve();
   

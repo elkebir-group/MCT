@@ -8,8 +8,9 @@
 #include "mctsolverbf.h"
 
 
-MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, int k)
-: MCTSolver(ctv, k){
+MCTSolverBF::MCTSolverBF(const CloneTreeVector& ctv, int k, int timelimit)
+: MCTSolver(ctv, k, timelimit)
+{
 }
 
 void MCTSolverBF::solve(){
@@ -18,6 +19,9 @@ void MCTSolverBF::solve(){
   IntVector clustering(n, 0);
   IntVector bestClustering;
   int bestClusteringCost = INT_MAX;
+  
+  seconds_type t(_timelimit);
+  auto start = std::chrono::high_resolution_clock::now();
   
   do
   {
@@ -28,6 +32,12 @@ void MCTSolverBF::solve(){
       bestClusteringCost = getClusteringCost();
       bestClustering = clustering;
     }
+    auto finish = std::chrono::high_resolution_clock::now();
+    
+    if (finish - start >= t){
+      break;
+    }
+    
   } while (next(clustering));
   
   setClustering(bestClustering);
