@@ -30,6 +30,12 @@ MCTSolver::~MCTSolver()
 void MCTSolver::run(MCTSolver& solver,
                     const std::string& outputPrefix)
 {
+  if (solver._k > solver._ctv.size())
+  {
+    std::cerr << "Error: more clusters than input trees" << std::endl;
+    return;
+  }
+  
   solver.solve();
   
   {
