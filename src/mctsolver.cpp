@@ -192,26 +192,17 @@ void MCTSolver::writeSummary(std::ostream& out, bool newLine) const
   std::chrono::duration<double> diff = finish - _startTimePoint;
   double secondsElapsed = diff.count();
   
-  out << getMethodName() << "\t" << secondsElapsed << "\t" << _k << "\t " << getClusteringCost() << "\t";
-  for (auto it = getCluster2Cost().begin(); it != getCluster2Cost().end();)
+  out << getMethodName() << "\t" << secondsElapsed << "\t" << _k << "\t " << getClusteringCost();
+  
+  for (int s = 0; s < _k; ++s)
   {
-    out << *it;
-    it++;
-    if (it != getCluster2Cost().end())
-    {
-      out << "\t";
-    }
+    out << "\t" << _cluster2cost[s];
   }
-  out << "\t";
-  for (auto it = getCluster2TotalTrees().begin();
-       it != getCluster2TotalTrees().end();)
+  
+  out << "\t" << _ctv.size();
+  for (int s = 0; s < _k; ++s)
   {
-    out << *it;
-    it++;
-    if (it != getCluster2TotalTrees().end())
-    {
-      out << "\t";
-    }
+    out << "\t" << _cluster2totaltrees[s];
   }
   
   if (newLine)
