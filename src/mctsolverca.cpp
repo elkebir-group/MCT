@@ -15,6 +15,7 @@ MCTSolverCA::MCTSolverCA(const CloneTreeVector& ctv,
   , _nrMaxRestarts(nrMaxRestarts)
   , _nrRestarts(0)
 {
+  assert(k <= ctv.size());
   init();
 }
 
@@ -32,7 +33,7 @@ void MCTSolverCA::writeSummary(std::ostream& out, bool newLine) const
 
 void MCTSolverCA::init()
 {
-  generateInitialClustering();
+  
 }
 
 void MCTSolverCA::updateClustering()
@@ -97,6 +98,9 @@ void MCTSolverCA::generateInitialClustering()
 
 void MCTSolverCA::solve()
 {
+  
+  generateInitialClustering();
+  
   int minCost = std::numeric_limits<int>::max();
   IntVector bestClustering;
   
