@@ -60,40 +60,48 @@ void MCTSolverCA::updateClustering()
   }
 }
 
+
+
+
 void MCTSolverCA::generateInitialClustering()
 {
   assert(_k >= 1);
   
   std::uniform_int_distribution<> unif(0, _k - 1);
+  IntVector Tid;
   
-  while(true)
-  {
-    resetClustering();
-    
-    IntVector clustering;
-    IntVector check(_k, 0);
-    for (int i = 0; i < getNumTrees(); i++)
-    {
-      // assign each tree to a random cluster
-      int cluster = unif(g_rng);
-      clustering.push_back(cluster);
-      check[cluster]++;
-    }
-    
-    bool valid = true;
-    for (int i: check)
-    {
-      if (i == 0)
-      {
-        valid = false;
-      }
-    }
-    if (valid)
-    {
-      setClustering(clustering);
-      return;
-    }
+  for (int i =0; i < getNumTrees(); i++){
+    Tid.push_back(i);
   }
+  
+  resetClustering();
+    
+  IntVector clustering( getNumTrees(),0);
+  IntVector check(_k, 0);
+  int zero_clusters=_k;
+  
+  while(Tid.size()>zero_clusters){
+  	std::uniform_int_distribution<> unif_T(0, Tid.size()-1);
+  	int idx=unif_T(g_rng);
+  	int i=Tid[idx];
+    int cluster=unif(g_rng);
+    //std::cout<<"assigning "<<i<<" to cluster "<<cluster<<std::endl;
+    clustering[i]=cluster;
+    Tid.erase(Tid.begin()+idx);
+    if (check[cluster]==0) zero_clusters--;
+    check[cluster]++;
+    //std::cout<<Tid.size()<<" trees left. "<< zero_clusters <<" zero clusters remaining" <<std::endl;
+  }
+  int cluster=0;
+  for (int i:Tid){
+    while(check[cluster]!=0) cluster++;
+    check[cluster]++; zero_clusters--;
+    clustering[i]=cluster;
+    //std::cout<<"assigning "<<i<<" to cluster "<<cluster<<std::endl;
+  }
+  //for (int i: clustering ) std::cout<<i<<" ";std::cout<<std::endl;
+  //for (int i: check ) std::cout<<i<<" ";std::cout<<std::endl;
+  setClustering(clustering);
 }
 
 void MCTSolverCA::solve()
