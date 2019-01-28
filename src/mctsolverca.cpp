@@ -80,10 +80,12 @@ void MCTSolverCA::generateInitialClustering()
   IntVector check(_k, 0);
   int zero_clusters=_k;
   
-  while(Tid.size()>zero_clusters){
-  	std::uniform_int_distribution<> unif_T(0, Tid.size()-1);
-  	int idx=unif_T(g_rng);
-  	int i=Tid[idx];
+  // while there are more trees than empty clusters
+  while(Tid.size() > zero_clusters)
+  {
+    std::uniform_int_distribution<> unif_T(0, Tid.size()-1);
+    int idx=unif_T(g_rng);
+    int i=Tid[idx];
     int cluster=unif(g_rng);
     //std::cout<<"assigning "<<i<<" to cluster "<<cluster<<std::endl;
     clustering[i]=cluster;
@@ -106,9 +108,6 @@ void MCTSolverCA::generateInitialClustering()
 
 void MCTSolverCA::solve()
 {
-  
-  generateInitialClustering();
-  
   int minCost = std::numeric_limits<int>::max();
   IntVector bestClustering;
   
@@ -119,6 +118,18 @@ void MCTSolverCA::solve()
   {
     generateInitialClustering();
     IntVector currClustering = _clustering;
+    for (int s = 0; s < _k; ++s)
+    {
+      bool ok = false;
+      for (int i = 0; i < _ctv.size(); ++i)
+      {
+        ok |= _clustering[i] == s;
+      }
+      if (!ok)
+      {
+        std::cerr << "error" << std::endl;
+      }
+    }
     
     int currCost = -1;
     while (true)
