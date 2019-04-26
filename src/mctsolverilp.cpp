@@ -552,8 +552,8 @@ void MCTSolverILP::solve()
 //  _model.add(_y[0][1][3] == 1);
 //  _model.add(_y[0][3][1] == 1);
 //  _cplex.exportModel("/tmp/test.lp");
-//  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackLazy(_env, _k, _b,
-//                                                                    _indexToMutation, _y, _z)));
+  _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackLazy(_env, _k, _b,
+                                                                    _indexToMutation, _y, _z)));
   _cplex.use(IloCplex::Callback(new (_env) MctSolverIlpCallbackUser(_env, _k, _b,
                                                                     _indexToMutation, _y, _z)));
 
